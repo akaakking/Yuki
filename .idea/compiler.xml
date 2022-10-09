@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="yuki-registry" />
         <module name="Y" />
+        <module name="yuki-registry-api" />
       </profile>
     </annotationProcessing>
   </component>

@@ -11,6 +11,7 @@
     <modules>
         <module>yuki-registry</module>
         <module>yuki-registry/yuki-registry-zookeeper</module>
+        <module>yuki-registry/yuki-registry-api</module>
     </modules>
 
     <properties>
