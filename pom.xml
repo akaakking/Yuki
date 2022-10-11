@@ -12,6 +12,11 @@
         <module>yuki-registry</module>
         <module>yuki-registry/yuki-registry-zookeeper</module>
         <module>yuki-registry/yuki-registry-api</module>
+        <module>yuki-nodeServer</module>
+        <module>yuki-common</module>
+        <module>yuki-transport</module>
+        <module>yuki-transport/yuki-transport-api</module>
+        <module>yuki-transport/yuki-transport-netty</module>
     </modules>
 
     <properties>

@@ -6,9 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="yuki-registry" />
-        <module name="Y" />
+        <module name="yuki-transport-netty" />
         <module name="yuki-registry-api" />
+        <module name="yuki-transport-api" />
+        <module name="yuki-registry" />
+        <module name="yuki-common" />
+        <module name="Y" />
+        <module name="yuki-transport" />
+        <module name="yuki-nodeServer" />
       </profile>
     </annotationProcessing>
   </component>

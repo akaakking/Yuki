@@ -5,8 +5,12 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.data.Stat;
+import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -32,5 +36,11 @@ public class ZookeeperDemo {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void fsd() {
+        String s = "fsdfdsfsdf";
+
     }
 }

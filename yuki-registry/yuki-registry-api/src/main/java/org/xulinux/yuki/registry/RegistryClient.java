@@ -13,4 +13,6 @@ public interface RegistryClient {
     void registerResources(String resourceId,NodeInfo nodeInfo);
     List<NodeInfo> getResouceHolders(String resourceId);
     void unRegisterResources(String resourceId,NodeInfo nodeInfo);
+    void destry();
+    void connect();
 }

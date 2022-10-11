@@ -26,6 +26,7 @@ public class ZookeeperClient implements RegistryClient {
     public ZookeeperClient() {
     }
 
+    @Override
     public void connect() {
         //调用工厂类CuratorFrameworkFactory的静态newClient()方法
         //第一个参数：ZK的连接地址
@@ -82,6 +83,7 @@ public class ZookeeperClient implements RegistryClient {
     }
 
 
+    @Override
     public void destry() {
         client.close();
     }
