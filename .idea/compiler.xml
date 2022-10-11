@@ -9,11 +9,14 @@
         <module name="yuki-transport-netty" />
         <module name="yuki-registry-api" />
         <module name="yuki-transport-api" />
+        <module name="yuki-demo-console" />
         <module name="yuki-registry" />
         <module name="yuki-common" />
         <module name="Y" />
         <module name="yuki-transport" />
+        <module name="yuki-demo-bs" />
         <module name="yuki-nodeServer" />
+        <module name="yuki-spring-boot" />
       </profile>
     </annotationProcessing>
   </component>

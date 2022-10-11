@@ -17,6 +17,8 @@
         <module>yuki-transport</module>
         <module>yuki-transport/yuki-transport-api</module>
         <module>yuki-transport/yuki-transport-netty</module>
+        <module>yuki-spring-boot</module>
+        <module>yuki-demo</module>
     </modules>
 
     <properties>

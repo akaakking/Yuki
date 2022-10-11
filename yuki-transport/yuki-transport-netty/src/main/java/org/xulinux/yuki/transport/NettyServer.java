@@ -62,8 +62,4 @@ public class NettyServer implements TransportServer{
         workGroup.shutdownGracefully();
     }
 
-
-    public void put(int key, int value) {
-        
-    }
 }

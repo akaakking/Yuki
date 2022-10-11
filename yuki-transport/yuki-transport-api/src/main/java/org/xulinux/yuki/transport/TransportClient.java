@@ -1,5 +1,9 @@
 package org.xulinux.yuki.transport;
 
+import org.xulinux.yuki.registry.NodeInfo;
+
+import java.util.List;
+
 /**
  * //TODO add class commment here
  *
@@ -8,5 +12,6 @@ package org.xulinux.yuki.transport;
  */
 public interface TransportClient {
 
-
+    // 可不可以搞成异步的呢？
+    void download(String resourceId, List<NodeInfo> resouceHolders);
 }

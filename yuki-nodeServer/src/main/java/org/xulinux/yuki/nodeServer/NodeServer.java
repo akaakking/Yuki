@@ -1,9 +1,13 @@
 package org.xulinux.yuki.nodeServer;
 
+import org.xulinux.yuki.registry.LoadBalance;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.registry.RegistryClient;
+import org.xulinux.yuki.transport.TransportClient;
+import org.xulinux.yuki.transport.TransportServer;
 
-import java.nio.IntBuffer;
+import java.util.List;
+
 
 /**
  * //TODO add interface commment here
@@ -17,6 +21,13 @@ public class NodeServer {
      * todo 未初始化
      */
     private RegistryClient registryClient;
+
+    private LoadBalance balance;
+
+
+    private TransportServer transportServer;
+
+    private TransportClient transportClient;
 
     /**
      * 自身节点信息
@@ -32,7 +43,7 @@ public class NodeServer {
         registryClient.connect();
 
         // 开启netty接收请求
-
+        transportServer.start();
     }
 
     public void terminal() {
@@ -40,7 +51,7 @@ public class NodeServer {
         registryClient.destry();
 
         // 关闭netty监听服务
-
+        transportServer.terminal();
     }
 
     public void registerResourth(String resourthID) {
@@ -51,8 +62,16 @@ public class NodeServer {
         registryClient.unRegisterResources(resourthID,nodeInfo);
     }
 
-    // regis  就相当于上传upload
-    public void download() {
+    /**
+     * 下载 资源
+     */
+    public void download(String resourceId) {
+        List<NodeInfo> resourceHolders = registryClient.getResouceHolders(resourceId);
 
+        int maxReceive = 20;
+
+        resourceHolders = balance.select(resourceHolders,maxReceive);
+
+        transportClient.download(resourceId,resourceHolders);
     }
 }
