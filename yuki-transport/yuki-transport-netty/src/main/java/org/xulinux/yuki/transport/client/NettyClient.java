@@ -1,6 +1,7 @@
-package org.xulinux.yuki.transport;
+package org.xulinux.yuki.transport.client;
 
 import org.xulinux.yuki.registry.NodeInfo;
+import org.xulinux.yuki.transport.TransportClient;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * @Author wfh
  * @Date 2022/10/11 下午4:33
  */
-public class NettyClient implements TransportClient{
+public class NettyClient implements TransportClient {
 
     @Override
     public void download(String resourceId, List<NodeInfo> recipient/* 接受者*/) {

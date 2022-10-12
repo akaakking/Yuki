@@ -1,4 +1,4 @@
-package org.xulinux.yuki.transport;
+package org.xulinux.yuki.transport.server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
@@ -9,6 +9,7 @@ import io.netty.channel.nio.NioEventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.xulinux.yuki.transport.TransportServer;
 
 import java.util.HashMap;
 
@@ -18,7 +19,7 @@ import java.util.HashMap;
  * @Author wfh
  * @Date 2022/10/11 下午2:53
  */
-public class NettyServer implements TransportServer{
+public class NettyServer implements TransportServer {
     private int port = 9140;
     NioEventLoopGroup bossGroup;
     NioEventLoopGroup workGroup;
