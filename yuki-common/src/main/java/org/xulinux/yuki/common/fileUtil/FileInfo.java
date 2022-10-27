@@ -10,14 +10,9 @@ public class FileInfo {
     private long size;
     private String name;
     private String dirPath;
-    private boolean directory;
 
     public void setSize(long size) {
         this.size = size;
-    }
-
-    public void setDirectory(boolean directory) {
-        this.directory = directory;
     }
 
     public void setName(String name) {
@@ -26,10 +21,6 @@ public class FileInfo {
 
     public void setDirPath(String dirPath) {
         this.dirPath = dirPath;
-    }
-
-    public boolean isDirectory() {
-        return directory;
     }
 
     public long getSize() {

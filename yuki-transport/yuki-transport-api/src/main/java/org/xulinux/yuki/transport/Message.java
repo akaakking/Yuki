@@ -3,7 +3,6 @@ package org.xulinux.yuki.transport;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
 
-import java.io.File;
 import java.util.List;
 
 /**

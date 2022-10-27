@@ -28,8 +28,7 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         // todo create dir
 
         // connect and request
-        resourceMetadata.setHolderCount(nodeInfos.size());
-        List<List<FileSectionInfo>> sections = resourceMetadata.split();
+        List<List<FileSectionInfo>> sections = resourceMetadata.split(nodeInfos.size());
 
         sendJob(ctx.channel(),sections.get(0));
 

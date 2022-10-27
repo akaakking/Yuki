@@ -30,5 +30,13 @@ public class Encoder extends MessageToByteEncoder<Message> {
         byteBuf.writeInt(bytes.length);
         byteBuf.writeBytes(bytes);
     }
+
+    @Test
+    public void tsgg() {
+        File file = new File("/home/wfh/dubbo/target/maven-shared-archive-resources/META-INF/LICENSE");
+
+        System.out.println(file.getAbsolutePath());
+        System.out.println(file.getParent());
+    }
 }
 

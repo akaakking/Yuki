@@ -16,71 +16,22 @@ public class ResourceMetadata {
     public static int DEFAULT_MAX_SECTION_SIZE = 1 << 23;
 
     private List<FileInfo> files;
+    private List<String> dirs;
     private List<List<FileSectionInfo>> sections;
-    private transient String resourcePath;
-    private int holderCount;
 
-    public void setHolderCount(int holderCount) {
-        this.holderCount = holderCount;
-    }
-
-    public void setFiles(List<FileInfo> files) {
-        this.files = files;
-    }
-
-    public List<FileInfo> getFiles() {
-        return files;
-    }
-
-    public List<List<FileSectionInfo>> getSections() {
-        return sections;
-    }
-
-    public void setSections(List<List<FileSectionInfo>> sections) {
-        this.sections = sections;
-    }
-
-    public List<List<FileSectionInfo>> split() {
-        sections = new ArrayList<>(holderCount);
-
-        for (int i = 0; i < holderCount; i++) {
-            sections.add(new ArrayList<>());
-        }
-
-        for (FileInfo file : files) {
-            if (file.isDirectory()) {
-                continue;
-            }
-
-            long unallocated = file.getSize();
-            int  index = 0;
-            int own = 0;
-
-            while (unallocated > 0) {
-                int offset;
-
-                if (unallocated > DEFAULT_MAX_SECTION_SIZE) {
-                    offset = DEFAULT_MAX_SECTION_SIZE;
-                    unallocated -= DEFAULT_MAX_SECTION_SIZE;
-                } else {
-                    offset = (int)unallocated;
-                    unallocated = 0;
-                }
-
-                FileSectionInfo fsi = new FileSectionInfo(file,index,offset);
-                sections.get(own++ % holderCount).add(fsi);
-            }
-        }
-
-        return sections;
-    }
+    // resource baseDir在本机的绝对路径
+    // 比如说 我们认为 /home/wfh/dubbo 是一个资源
+    // 那么这个resourthpath实际上指的是？
+    private transient String resourceParentPath;
 
     public ResourceMetadata() {
     }
 
     // 只可传输目录不可传输文件
     public ResourceMetadata(String resourcepath) {
-        this.resourcePath = resourcepath;
+        // /home/wfh/dubbo
+        // /home/wfh
+        this.resourceParentPath = resourcepath.substring(0, resourcepath.lastIndexOf("/"));
         File file = new File(resourcepath);
 
         visit(file);
@@ -88,24 +39,64 @@ public class ResourceMetadata {
 
     private void visit(File file) {
         if (file.isFile()) {
+            // 是一个file
             FileInfo fileInfo = new FileInfo();
             fileInfo.setSize(file.length());
             fileInfo.setName(file.getName());
-            fileInfo.setDirPath(file.getAbsolutePath().replace(resourcePath,""));
-            fileInfo.setDirectory(false);
+            fileInfo.setDirPath(file.getParent().replace(this.resourceParentPath,""));
             files.add(fileInfo);
             return;
         }
 
-        FileInfo dirInfo = new FileInfo();
-        dirInfo.setDirectory(true);
-        dirInfo.setDirPath(file.getAbsolutePath().replace(resourcePath,""));
-        dirInfo.setName(file.getName());
-        files.add(dirInfo);
+        // 是一个文件夹
+        // /dubbo
+        dirs.add(file.getAbsolutePath().replace(this.resourceParentPath,""));
 
         for (File f : file.listFiles()) {
             visit(f);
         }
+    }
+
+    public void creatDir() {
+        for (String dir : dirs) {
+            File file = new File(this.resourceParentPath + dir);
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+        }
+    }
+
+    public void creatDir(String resourceParentPath) {
+        this.resourceParentPath = resourceParentPath;
+        creatDir();
+    }
+
+
+
+    public List<List<FileSectionInfo>> split(int holderCount) {
+        sections = new ArrayList<>(holderCount);
+
+        for (int i = 0; i < holderCount; i++) {
+            sections.add(new ArrayList<>());
+        }
+
+        for (FileInfo file : files) {
+            long unallocated = file.getSize();
+            int index = 0;
+            long offset = 0;
+
+            while (unallocated != 0) {
+                int alloc = unallocated > DEFAULT_MAX_SECTION_SIZE
+                        ? DEFAULT_MAX_SECTION_SIZE
+                        : (int) unallocated;
+
+                sections.get(index++ % holderCount).add(new FileSectionInfo(file,offset,alloc));
+                unallocated -= alloc;
+                offset += alloc;
+            }
+        }
+
+        return sections;
     }
 }
 

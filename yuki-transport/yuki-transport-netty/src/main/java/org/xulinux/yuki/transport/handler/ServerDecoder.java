@@ -1,9 +1,12 @@
 package org.xulinux.yuki.transport.handler;
 
+import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.xulinux.yuki.transport.Message;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -29,6 +32,10 @@ public class ServerDecoder extends ByteToMessageDecoder {
             return;
         }
 
+        String json = byteBuf.toString(byteBuf.readerIndex(),jsonSize, StandardCharsets.UTF_8);
 
+        Message message = JSON.parseObject(json,Message.class);
+
+        list.add(message);
     }
 }

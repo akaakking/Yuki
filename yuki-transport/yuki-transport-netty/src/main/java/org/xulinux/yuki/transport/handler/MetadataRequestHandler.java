@@ -36,12 +36,16 @@ public class MetadataRequestHandler extends ChannelInboundHandlerAdapter {
         // 好的系统设计处处是缓存，比如说咱们这里就可以做一个，todo
         // 缓存就是在要生成东西的地方做个map先去get一下
 
-        ResourceMetadata  resourceMetadata = new ResourceMetadata();
+
+        // todo 重新设计resourceMetadata
+        ResourceMetadata  resourceMetadata = new ResourceMetadata(path);
+
+        Message response = new Message();
+        message.setType(Message.Type.METADATA_RESPONSE);
+        message.setMetadata(resourceMetadata);
+
+        ctx.writeAndFlush(message);
     }
-
-
-
-
 
     public void setId2path(ConcurrentHashMap<String, String> id2path) {
         this.id2path = id2path;
