@@ -3,22 +3,30 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>Yuki</artifactId>
+        <artifactId>yuki-spring-boot</artifactId>
         <groupId>org.xulinux</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>yuki-spring-boot</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>yuki-spring-boot-starter</module>
-        <module>yuki-spring-boot-autoconfigure</module>
-    </modules>
+    <artifactId>yuki-spring-boot-autoconfigure</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <version>2.7.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xulinux</groupId>
+            <artifactId>yuki-nodeServer</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 </project>

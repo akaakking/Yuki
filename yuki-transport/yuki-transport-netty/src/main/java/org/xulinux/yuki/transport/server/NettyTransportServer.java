@@ -5,7 +5,11 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import org.xulinux.yuki.transport.TransportServer;
+import org.xulinux.yuki.transport.handler.FileTransferHandler;
+import org.xulinux.yuki.transport.handler.MetadataRequestHandler;
+import org.xulinux.yuki.transport.handler.ServerDecoder;
 
 
 /**
@@ -35,7 +39,10 @@ public class NettyTransportServer implements TransportServer {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        socketChannel.pipeline().addLast();
+                        socketChannel.pipeline().addLast(new ChunkedWriteHandler())
+                                .addLast(new ServerDecoder())
+                                .addLast(new MetadataRequestHandler())
+                                .addLast(new FileTransferHandler());
                     }
                 });
 

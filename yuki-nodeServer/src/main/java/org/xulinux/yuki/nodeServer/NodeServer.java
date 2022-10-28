@@ -7,6 +7,7 @@ import org.xulinux.yuki.transport.TransportClient;
 import org.xulinux.yuki.transport.TransportServer;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -24,10 +25,16 @@ public class NodeServer {
 
     private LoadBalance balance;
 
-
     private TransportServer transportServer;
 
     private TransportClient transportClient;
+
+    private String zkIp;
+
+    private int zkPort;
+
+    private String aofPath;
+
 
     /**
      * 自身节点信息
@@ -38,7 +45,23 @@ public class NodeServer {
     public NodeServer() {
     }
 
-    public void start() {
+    public void setAofPath(String aofPath) {
+        this.aofPath = aofPath;
+    }
+
+    public void setNodeInfo(NodeInfo nodeInfo) {
+        this.nodeInfo = nodeInfo;
+    }
+
+    public void setZkIp(String zkIp) {
+        this.zkIp = zkIp;
+    }
+
+    public void setZkPort(int zkPort) {
+        this.zkPort = zkPort;
+    }
+
+    public void exportService() {
         // 初始化registryClient
         registryClient.connect();
 
@@ -73,5 +96,8 @@ public class NodeServer {
         resourceHolders = balance.select(resourceHolders,maxReceive);
 
         transportClient.download(resourceId,resourceHolders);
+
+        // down
+        registerResourth(resourceId);
     }
 }
