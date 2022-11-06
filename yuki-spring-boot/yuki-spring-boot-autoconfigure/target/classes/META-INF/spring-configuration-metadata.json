@@ -1,0 +1,43 @@
+{
+  "groups": [
+    {
+      "name": "yuki",
+      "type": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+    },
+    {
+      "name": "yuki.zk",
+      "type": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties",
+      "sourceMethod": "getZk()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "yuki.aof-path",
+      "type": "java.lang.String",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+    },
+    {
+      "name": "yuki.max-servicing",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+    },
+    {
+      "name": "yuki.port",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+    },
+    {
+      "name": "yuki.zk.ip",
+      "type": "java.lang.String",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk"
+    },
+    {
+      "name": "yuki.zk.port",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk"
+    }
+  ],
+  "hints": []
+}

@@ -1,5 +1,7 @@
 package org.xulinux.yuki.transport;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * //TODO add interface commment here
  *
@@ -9,4 +11,6 @@ package org.xulinux.yuki.transport;
 public interface TransportServer {
     void start();
     void terminal();
+    AtomicInteger transporting();
+    void setPort(int port);
 }

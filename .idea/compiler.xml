@@ -6,19 +6,24 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="yuki-transport-netty" />
+        <module name="yuki-demo-telnetServer" />
         <module name="yuki-registry-api" />
-        <module name="yuki-transport-api" />
         <module name="yuki-spring-boot-starter" />
-        <module name="yuki-demo-console" />
         <module name="yuki-registry" />
         <module name="yuki-common" />
+        <module name="yuki-nodeServer" />
+        <module name="yuki-demo-HttpNodeServer" />
+        <module name="yuki-demo-webClient" />
+        <module name="yuki-transport-netty" />
+        <module name="yuki-transport-api" />
         <module name="yuki-spring-boot-autoconfigure" />
         <module name="Y" />
         <module name="yuki-transport" />
-        <module name="yuki-demo-bs" />
-        <module name="yuki-nodeServer" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="yuki-demo-bs" target="11" />
+      <module name="yuki-demo-console" target="11" />
+    </bytecodeTargetLevel>
   </component>
 </project>

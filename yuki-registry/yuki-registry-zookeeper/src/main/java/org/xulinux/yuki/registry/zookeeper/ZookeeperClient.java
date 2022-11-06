@@ -17,7 +17,8 @@ import java.util.List;
  * @Date 2022/10/8 下午6:17
  */
 public class ZookeeperClient implements RegistryClient {
-
+    private int port;
+    private String ip;
     // todo 考虑加锁的问题
 
     public static final String YUKI_PRE = "/yuki/";
@@ -31,8 +32,10 @@ public class ZookeeperClient implements RegistryClient {
         //调用工厂类CuratorFrameworkFactory的静态newClient()方法
         //第一个参数：ZK的连接地址
         //第二个参数：重试策略
+        String connectString = ip == null ? "127.0.0.1:2181" : ip + ":" + port;
+
         client = CuratorFrameworkFactory.newClient(
-                "127.0.0.1:2181",
+                connectString,
                 new ExponentialBackoffRetry(1000, 3));
         client.start();
     }
@@ -82,9 +85,23 @@ public class ZookeeperClient implements RegistryClient {
         }
     }
 
+    @Override
+    public void setRegistryHost(String ip, int port) {
+        setIp(ip);
+        setPort(port);
+    }
+
 
     @Override
     public void destry() {
         client.close();
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
     }
 }

@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
  */
 public class DefaultLoadBalance implements LoadBalance{
 
-    // 根据负载因子 能够承受的最大的和现在正在承受的
+    // 根据负载因子 能够承受的最大的和现在正在承受的，这种就可以看作是一种柔性负载。但是很难受的一点是不支持缓存了，。
+    // 要不搞一个一致性hash？
     @Override
     public List<NodeInfo> select(List<NodeInfo> nodes, int maxReceive) {
         return nodes

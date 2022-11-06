@@ -1,10 +1,13 @@
 package org.xulinux.yuki.springboot.autoconfigure;
 
-import jdk.jshell.Snippet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.Environment;
-import org.w3c.dom.Node;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.xulinux.yuki.nodeServer.NodeServer;
 import org.xulinux.yuki.registry.NodeInfo;
 
@@ -17,23 +20,30 @@ import java.net.UnknownHostException;
  * @Author wfh
  * @Date 2022/10/28 上午10:21
  */
+@Configuration
+@ConditionalOnClass(NodeServer.class)
+@EnableConfigurationProperties(YukiProperties.class)
 public class YukiAutoConfiguration {
+
     @Autowired
-    private Environment environment;
+    private YukiProperties yukiProperties;
 
     @Bean
-    public NodeServer getNodeServer() {
+    @ConditionalOnMissingBean(NodeServer.class)
+    @ConditionalOnProperty(prefix = "yuki",value = "enabled", havingValue = "true",matchIfMissing = true)
+    public NodeServer nodeServer() {
         NodeServer nodeServer = new NodeServer();
 
         // zk
-        String zkIp = environment.getProperty("yuki.zkIp");
-        int zkPort = Integer.parseInt(environment.getProperty("yuki.zkPort"));
+        YukiProperties.Zk zk = yukiProperties.getZk();
+        String zkIp = zk.getIp();
+        int zkPort = zk.getPort();
         nodeServer.setZkIp(zkIp);
         nodeServer.setZkPort(zkPort);
 
         // nodeinfo
-        int nodePort = Integer.parseInt(environment.getProperty("yuki.nodeinfo.port"));
-        int maxServicing = Integer.parseInt(environment.getProperty("yuki.nodeinfo.maxServicing"));
+        int nodePort = yukiProperties.getPort();
+        int maxServicing = yukiProperties.getMaxServicing();
         String ip = null;
         try {
             ip = Inet4Address.getLocalHost().getHostAddress();
@@ -41,6 +51,7 @@ public class YukiAutoConfiguration {
             // TODO 日志
             System.exit(0);
         }
+
         NodeInfo nodeInfo = new NodeInfo();
         nodeInfo.setIp(ip);
         nodeInfo.setPort(nodePort);
@@ -48,10 +59,18 @@ public class YukiAutoConfiguration {
         nodeServer.setNodeInfo(nodeInfo);
 
         // 持久化
-        String aofPath = environment.getProperty("yuki.aofPath");
+        String aofPath = yukiProperties.getAofPath();
         nodeServer.setAofPath(aofPath);
 
         return nodeServer;
+    }
+
+    public void setYukiProperties(YukiProperties yukiProperties) {
+        this.yukiProperties = yukiProperties;
+    }
+
+    public YukiProperties getYukiProperties() {
+        return yukiProperties;
     }
 
     /**

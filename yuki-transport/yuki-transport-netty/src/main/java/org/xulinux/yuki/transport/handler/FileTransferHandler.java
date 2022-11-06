@@ -10,6 +10,7 @@ import org.xulinux.yuki.transport.Message;
 import java.io.RandomAccessFile;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * //TODO add class commment here
@@ -20,6 +21,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FileTransferHandler extends ChannelInboundHandlerAdapter {
     private ConcurrentHashMap<String,String> id2path;
     private int chunksize = 1 << (10 + 3);
+    private AtomicInteger transCount;
+
+    public void setTransCount(AtomicInteger transCount) {
+        this.transCount = transCount;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -30,6 +36,8 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
         if (fileSectionInfos == null) {
             return;
         }
+
+        transCount.getAndIncrement();
 
         String resourthPath = id2path.get(message.getResourceId());
 
@@ -60,5 +68,7 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
             }
 
         }
+
+        transCount.decrementAndGet();
     }
 }

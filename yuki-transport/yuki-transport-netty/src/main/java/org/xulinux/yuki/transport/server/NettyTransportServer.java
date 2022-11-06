@@ -11,20 +11,28 @@ import org.xulinux.yuki.transport.handler.FileTransferHandler;
 import org.xulinux.yuki.transport.handler.MetadataRequestHandler;
 import org.xulinux.yuki.transport.handler.ServerDecoder;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 /**
  * @Author wfh
  * @Date 2022/10/11 下午2:53
  */
 public class NettyTransportServer implements TransportServer {
-    private int port = 9140;
+    public static final int DEFAULT_SERVER_PORT = 9140;
+    private int port;
     private NioEventLoopGroup bossGroup;
     private NioEventLoopGroup workGroup;
+    private AtomicInteger transCount = new AtomicInteger(0);
 
     @Override
     public void start() {
         if (bossGroup != null) {
             return;
+        }
+
+        if (port == 0) {
+            this.port = DEFAULT_SERVER_PORT;
         }
 
         bossGroup = new NioEventLoopGroup(1);
@@ -67,4 +75,13 @@ public class NettyTransportServer implements TransportServer {
         workGroup.shutdownGracefully();
     }
 
+    @Override
+    public AtomicInteger transporting() {
+        return transCount;
+    }
+
+    @Override
+    public void setPort(int port) {
+        this.port = port;
+    }
 }
