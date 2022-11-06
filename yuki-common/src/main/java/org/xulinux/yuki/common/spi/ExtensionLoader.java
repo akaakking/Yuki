@@ -1,6 +1,5 @@
 package org.xulinux.yuki.common.spi;
 
-import java.lang.reflect.Parameter;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +24,7 @@ public class ExtensionLoader {
         // 因为基本上就是第一个了
         Object o = serviceLoader.findFirst().get();
 
-        cachedInstance.put(clazz,o);
+        cachedInstance.putIfAbsent(clazz,o);
 
         return (T)cachedInstance.get(clazz);
     }

@@ -6,6 +6,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.string.StringDecoder;
+import org.junit.Test;
+import org.xulinux.yuki.common.spi.ExtensionLoader;
+import org.xulinux.yuki.registry.DefaultLoadBalance;
+import org.xulinux.yuki.registry.LoadBalance;
+import org.xulinux.yuki.transport.TransportClient;
+
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 
 /**
@@ -15,6 +23,15 @@ import io.netty.handler.codec.string.StringDecoder;
  * @Date 2022/10/14 下午2:48
  */
 public class NettyClient {
+
+    @Test
+    public void testSPI() {
+        Iterator<LoadBalance> iterator = ServiceLoader.load(LoadBalance.class).iterator();
+
+//        ExtensionLoader.getExtension(LoadBalance.class);
+//        ExtensionLoader.getExtension(TransportClient.class);
+    }
+
 
     public static void main(String[] args) {
         Bootstrap bootstrap = new Bootstrap();

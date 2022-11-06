@@ -29,6 +29,9 @@ public class NettyTransportClient implements TransportClient {
     private List<NodeInfo> nodeInfos;
     private String resourceId;
 
+    public NettyTransportClient() {
+    }
+
     /**
      * 断点续传。
      * 先不考虑对面节点假死的情况，也就是不做计时相关的东西。
@@ -65,7 +68,7 @@ public class NettyTransportClient implements TransportClient {
     }
 
     // 客户端部分的bootstrap
-    public void ininBootstrap(int serverNum) {
+    private void ininBootstrap(int serverNum) {
         MetadataResponseHandler metadataResponseHandler = new MetadataResponseHandler();
         metadataResponseHandler.setBootstrap(bootstrap);
         metadataResponseHandler.setNodeInfos(nodeInfos);

@@ -15,3 +15,4 @@ public interface TransportClient {
     // 可不可以搞成异步的呢？
     void download(String resourceId, List<NodeInfo> resouceHolders);
 }
+
