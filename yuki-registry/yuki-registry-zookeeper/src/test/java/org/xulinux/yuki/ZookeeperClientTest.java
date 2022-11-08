@@ -19,8 +19,8 @@ public class ZookeeperClientTest {
 
         zookeeperClient.connect();
 
-        zookeeperClient.registerResources("金刚大战蝙蝠侠",new NodeInfo("127.0.0.1:8080:20:32"));
-        System.out.println(zookeeperClient.getResouceHolders("金刚大战蝙蝠侠"));
+//        zookeeperClient.registerResources("金刚大战蝙蝠侠",new NodeInfo("127.0.0.1:8080:20:32"));
+//        System.out.println(zookeeperClient.getResouceHolders("金刚大战蝙蝠侠"));
 
         try {
             new CountDownLatch(1).await();

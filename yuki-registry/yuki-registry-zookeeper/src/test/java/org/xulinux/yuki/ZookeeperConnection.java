@@ -7,10 +7,7 @@ import org.xulinux.yuki.registry.NodeInfo;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
@@ -35,6 +32,7 @@ public class ZookeeperConnection {
 
         return zk;
     }
+
 
     @Test
     public void creat() {

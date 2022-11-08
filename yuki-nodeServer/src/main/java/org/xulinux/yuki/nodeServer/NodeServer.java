@@ -2,6 +2,7 @@ package org.xulinux.yuki.nodeServer;
 
 import org.xulinux.yuki.common.Listenner;
 import org.xulinux.yuki.common.Speaker;
+import org.xulinux.yuki.common.fileUtil.FileUtil;
 import org.xulinux.yuki.common.spi.ExtensionLoader;
 import org.xulinux.yuki.registry.LoadBalance;
 import org.xulinux.yuki.registry.NodeInfo;
@@ -9,9 +10,12 @@ import org.xulinux.yuki.registry.RegistryClient;
 import org.xulinux.yuki.transport.TransportClient;
 import org.xulinux.yuki.transport.TransportServer;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,6 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date 2022/10/10 下午5:40
  */
 public class NodeServer implements Speaker {
+
+    private static final ConcurrentHashMap<String, String> id2path = new ConcurrentHashMap<>();
+
     /**
      * zk 句柄
      * spi ?
@@ -60,6 +67,33 @@ public class NodeServer implements Speaker {
         balance = ExtensionLoader.getExtension(LoadBalance.class);
         transportClient = ExtensionLoader.getExtension(TransportClient.class);
     }
+
+    private void ininID2Path() {
+        if (aofPath == null) {
+            // todo trow
+            return;
+        }
+
+        File file = new File(aofPath);
+
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        List<String> list = FileUtil.readList(aofPath);
+        // key%value
+        for (String s : list) {
+            String[] kv = s.split("%");
+
+            id2path.put(kv[0],kv[1]);
+        }
+    }
+
 
     private void ininTransportServer() {
         transportServer = ExtensionLoader.getExtension(TransportServer.class);

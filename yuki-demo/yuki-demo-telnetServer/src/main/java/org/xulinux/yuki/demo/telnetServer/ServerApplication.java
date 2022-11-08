@@ -1,15 +1,10 @@
 package org.xulinux.yuki.demo.telnetServer;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
 import org.xulinux.yuki.nodeServer.NodeServer;
-import org.xulinux.yuki.springboot.autoconfigure.YukiProperties;
-
-import java.io.OutputStream;
 
 /**
  * 因为是文件传输嘛，所以还得搭一个产品

@@ -9,6 +9,7 @@ import org.xulinux.yuki.registry.RegistryClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * //TODO add class commment here
@@ -20,6 +21,7 @@ public class ZookeeperClient implements RegistryClient {
     private int port;
     private String ip;
     // todo 考虑加锁的问题
+
 
     public static final String YUKI_PRE = "/yuki/";
     private CuratorFramework client;
@@ -40,6 +42,22 @@ public class ZookeeperClient implements RegistryClient {
         client.start();
     }
 
+    // todo cache nodes
+    @Override
+    public List<String> searchResource(String nameStart) {
+        try {
+            List<String> list = client.getChildren().forPath("/yuki");
+
+            return     list.stream().filter(s -> s.startsWith(nameStart))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // todo throw
+        return new ArrayList<>();
+    }
+
     @Override
     public void registerResources(String resourceId, NodeInfo nodeInfo) {
         String path = buildNodePath(resourceId,nodeInfo);
@@ -57,7 +75,7 @@ public class ZookeeperClient implements RegistryClient {
     public List<NodeInfo> getResouceHolders(String resourceId) {
         List<NodeInfo> holders = new ArrayList<>();
         try {
-            List<String> list = client.getChildren().forPath(YUKI_PRE + resourceId);
+            List<String> list = client.getChildren().forPath(YUKI_PRE  + resourceId);
             if (list != null) {
                 for (String s : list) {
                     holders.add(new NodeInfo(s));
@@ -71,7 +89,7 @@ public class ZookeeperClient implements RegistryClient {
     }
 
     private String buildNodePath(String resourceId, NodeInfo nodeInfo) {
-        return YUKI_PRE + resourceId + "/" + nodeInfo;
+        return YUKI_PRE  + resourceId + "/" + nodeInfo;
     }
 
     @Override
@@ -105,3 +123,6 @@ public class ZookeeperClient implements RegistryClient {
         this.ip = ip;
     }
 }
+/**
+ * 1024 * 1024 / 24 = 43690
+ */

@@ -16,4 +16,5 @@ public interface RegistryClient {
     void setRegistryHost(String ip,int port);
     void destry();
     void connect();
+    List<String> searchResource(String nameStart);
 }
