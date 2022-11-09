@@ -52,5 +52,10 @@ public class FileSectionInfo {
     public FileInfo getFileInfo() {
         return fileInfo;
     }
+
+    public void receive(int received) {
+        this.offset += received;
+        this.length -= received;
+    }
 }
 

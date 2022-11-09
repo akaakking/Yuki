@@ -5,6 +5,7 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
+import org.xulinux.yuki.common.recorder.Recorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
@@ -46,7 +47,11 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         }
     }
 
+    // 将任务发送给对端同时在自己接收这边做了设置
     private void sendJob(Channel ch, List<FileSectionInfo> fileSectionInfos) {
+        ch.pipeline().get(ClientDecoder.class).setFileSectionInfos(fileSectionInfos);
+        ch.pipeline().get(ClientDecoder.class).setRecorder(new Recorder(fileSectionInfos));
+
         Message message = new Message();
         message.setType(Message.Type.FILE_SECTION_ASSIGN);
         message.setResourceId(resourceId);

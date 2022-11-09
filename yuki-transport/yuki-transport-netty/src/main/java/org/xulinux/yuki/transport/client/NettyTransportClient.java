@@ -64,6 +64,8 @@ public class NettyTransportClient implements TransportClient {
             connect.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            close();
         }
     }
 

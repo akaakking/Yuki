@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
+ *  不可共享
  *
  * @Author wfh
  * @Date 2022/10/14 上午9:20
@@ -28,6 +29,8 @@ public class ClientDecoder extends ByteToMessageDecoder {
     private Recorder recorder;
 
     private List<FileSectionInfo> fileSectionInfos;
+
+    private FileSectionInfo currSection;
 
     // raf 要不要做个池嘞
     private RandomAccessFile raf;
@@ -69,12 +72,18 @@ public class ClientDecoder extends ByteToMessageDecoder {
         // 零拷贝都是针对发送而言的吗，接受这边不可以用？
         raf.getChannel().write(buffer);
 
+        recorder.record(readsize);
+
         sectionLength -= readsize;
 
         if (sectionLength == 0) {
             raf.close();
             this.state = State.HEAD_PARSE;
         }
+    }
+
+    public void setRecorder(Recorder recorder) {
+        this.recorder = recorder;
     }
 
     private void headParser(ByteBuf byteBuf, List<Object> list) {
@@ -108,14 +117,16 @@ public class ClientDecoder extends ByteToMessageDecoder {
     }
 
     private void setFileSection(int fileSectionIndex) {
-        FileSectionInfo fileSectionInfo = fileSectionInfos.get(fileSectionIndex);
-        sectionLength = fileSectionInfo.getLength();
+        currSection = fileSectionInfos.get(fileSectionIndex);
+        sectionLength = currSection.getLength();
+
+        recorder.setFile(fileSectionIndex);
 
         try {
-            raf = new RandomAccessFile(baseDir + fileSectionInfo.getDirPath() + fileSectionInfo.getFileName(),"rw");
-            raf.seek(fileSectionInfo.getOffset());
+            raf = new RandomAccessFile(baseDir + currSection.getDirPath() + currSection.getFileName(),"rw");
+            raf.seek(currSection.getOffset());
 
-            recorder.setFile(fileSectionInfo);
+            recorder.setFile(fileSectionIndex);
         } catch (FileNotFoundException e) {
             // 没有就创建了，为什么会这样嘞
             e.printStackTrace();
