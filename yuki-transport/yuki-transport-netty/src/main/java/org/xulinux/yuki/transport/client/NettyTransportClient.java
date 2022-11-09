@@ -80,7 +80,6 @@ public class NettyTransportClient implements TransportClient {
         bootstrap.group(eventLoopGroup);
         bootstrap.channel(NioSocketChannel.class);
 
-
         // 内部类 final ？
         bootstrap.handler(new ChannelInitializer<NioSocketChannel>() {
             @Override
@@ -93,7 +92,6 @@ public class NettyTransportClient implements TransportClient {
                 channel.pipeline().addLast(metadataResponseHandler);
             }
         });
-
     }
 
     public void close() {

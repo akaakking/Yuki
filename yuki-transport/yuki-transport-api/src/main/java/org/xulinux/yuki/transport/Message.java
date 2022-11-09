@@ -16,15 +16,17 @@ public class Message {
     private String resourceId;
     private ResourceMetadata metadata;
     private List<FileSectionInfo> sectionInfos;
-    private FileSectionInfo fileSectionInfo;
+    private Integer sectionIndex;
 
-    public FileSectionInfo getFileSectionInfo() {
-        return fileSectionInfo;
+
+    public void setSectionIndex(Integer sectionIndex) {
+        this.sectionIndex = sectionIndex;
     }
 
-    public void setFileSectionInfo(FileSectionInfo fileSectionInfo) {
-        this.fileSectionInfo = fileSectionInfo;
+    public Integer getSectionIndex() {
+        return sectionIndex;
     }
+
 
     public String getResourceId() {
         return resourceId;

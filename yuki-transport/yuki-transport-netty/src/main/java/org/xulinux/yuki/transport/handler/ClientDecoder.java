@@ -6,6 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
+import org.xulinux.yuki.common.recorder.Recorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
@@ -18,13 +19,15 @@ import java.util.List;
 
 /**
  *
- *
  * @Author wfh
  * @Date 2022/10/14 上午9:20
  */
 public class ClientDecoder extends ByteToMessageDecoder {
     private List<NodeInfo> nodeInfos;
     private ResourceMetadata metadata;
+    private Recorder recorder;
+
+    private List<FileSectionInfo> fileSectionInfos;
 
     // raf 要不要做个池嘞
     private RandomAccessFile raf;
@@ -96,7 +99,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
                 list.add(message.getMetadata());
                 break;
             case File_HEAD_INFO:
-                setFileSection(message.getFileSectionInfo());
+                setFileSection(message.getSectionIndex());
                 this.state = State.FILE_TRANSFER;
                 break;
             default:
@@ -104,12 +107,15 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
     }
 
-    private void setFileSection(FileSectionInfo fileSectionInfo) {
+    private void setFileSection(int fileSectionIndex) {
+        FileSectionInfo fileSectionInfo = fileSectionInfos.get(fileSectionIndex);
         sectionLength = fileSectionInfo.getLength();
 
         try {
             raf = new RandomAccessFile(baseDir + fileSectionInfo.getDirPath() + fileSectionInfo.getFileName(),"rw");
             raf.seek(fileSectionInfo.getOffset());
+
+            recorder.setFile(fileSectionInfo);
         } catch (FileNotFoundException e) {
             // 没有就创建了，为什么会这样嘞
             e.printStackTrace();
@@ -120,6 +126,10 @@ public class ClientDecoder extends ByteToMessageDecoder {
 
     public void setBaseDir(String baseDir) {
         this.baseDir = baseDir;
+    }
+
+    public void setFileSectionInfos(List<FileSectionInfo> fileSectionInfos) {
+        this.fileSectionInfos = fileSectionInfos;
     }
 
     /**
@@ -147,11 +157,9 @@ public class ClientDecoder extends ByteToMessageDecoder {
 }
 
 /**
- * 发送方：
- * int    |  String   |  bytes    |
- * size   |   content |    文件   |
- *
- * 现在还有一个问题要解决
- *
- * 扩容扩不了，消费消费不全这要怎么办。
+ * 理一下思路
+ * 客户端    请求metadata
+ * 服务器这边 返回metadata
+ * 客户端 接收metadata之后distribute发送给多个服务器，但是也要做一个分发相当于。
+ * 服务器这边接收到自己的那一份要保存起来
  */

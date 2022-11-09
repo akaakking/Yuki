@@ -49,11 +49,12 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
             isLinux = true;
         }
 
-        for (FileSectionInfo fileSectionInfo : fileSectionInfos) {
+        for (int index =  0; index < fileSectionInfos.size(); index++) {
+            FileSectionInfo fileSectionInfo = fileSectionInfos.get(index);
             Message responseHead = new Message();
 
             responseHead.setType(Message.Type.File_HEAD_INFO);
-            responseHead.setFileSectionInfo(fileSectionInfo);
+            responseHead.setSectionIndex(index);
 
             ctx.write(responseHead);
 
@@ -62,9 +63,9 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
             RandomAccessFile raf = new RandomAccessFile(sectionPath,"r");
 
             if (isLinux) {
-                ctx.write(new DefaultFileRegion(raf.getChannel(),fileSectionInfo.getOffset(),fileSectionInfo.getLength()));
+                ctx.writeAndFlush(new DefaultFileRegion(raf.getChannel(),fileSectionInfo.getOffset(),fileSectionInfo.getLength()));
             } else {
-                ctx.write(new ChunkedFile(raf,fileSectionInfo.getOffset(),fileSectionInfo.getLength(),chunksize));
+                ctx.writeAndFlush(new ChunkedFile(raf,fileSectionInfo.getOffset(),fileSectionInfo.getLength(),chunksize));
             }
 
         }

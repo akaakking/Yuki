@@ -137,9 +137,6 @@ public class NodeServer implements Speaker {
             return;
         }
 
-        ininTransportServer();
-        ininRegistryClient();
-
         this.speak("正在连接zk...");
         // 初始化registryClient
         registryClient.connect();
@@ -152,6 +149,12 @@ public class NodeServer implements Speaker {
         transportServer.start();
         this.speak("服务已开启");
         this.start = true;
+    }
+
+    public void ininServer() {
+        ininID2Path();
+        ininRegistryClient();
+        ininTransportServer();
     }
 
     public void terminal() {
