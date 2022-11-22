@@ -27,8 +27,7 @@ public class ServerApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(ServerApplication.class, args);
         Environment environment = context.getBean(Environment.class);
-        System.out.println(environment.getProperty("yuki.telnet.port"));
-        NodeServer nodeServer   = context.getBean(NodeServer.class);
+        NodeServer nodeServer  = context.getBean(NodeServer.class);
 
         int port = Integer.parseInt(environment.getProperty("yuki.telnet.port"));
 

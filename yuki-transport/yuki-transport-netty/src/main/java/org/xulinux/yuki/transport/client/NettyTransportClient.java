@@ -15,7 +15,10 @@ import org.xulinux.yuki.transport.handler.Encoder;
 import org.xulinux.yuki.transport.handler.MetadataRequestHandler;
 import org.xulinux.yuki.transport.handler.MetadataResponseHandler;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * mutiClient
@@ -98,5 +101,9 @@ public class NettyTransportClient implements TransportClient {
 
     public void close() {
         eventLoopGroup.shutdownGracefully();
+    }
+
+    void mi() {
+
     }
 }

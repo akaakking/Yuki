@@ -12,12 +12,6 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import org.xulinux.yuki.nodeServer.NodeServer;
 
-/**
- * //TODO add class commment here
- *
- * @Author wfh
- * @Date 2022/10/29 下午9:04
- */
 public class TelnetNettyServer {
     private NodeServer nodeServer;
 

@@ -6,10 +6,10 @@
       "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
     },
     {
-      "name": "yuki.zk",
-      "type": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk",
+      "name": "yuki.registry",
+      "type": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry",
       "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties",
-      "sourceMethod": "getZk()"
+      "sourceMethod": "getRegistry()"
     }
   ],
   "properties": [
@@ -29,14 +29,24 @@
       "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
     },
     {
+      "name": "yuki.registry.ip",
+      "type": "java.lang.String",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
+    },
+    {
+      "name": "yuki.registry.port",
+      "type": "java.lang.Integer",
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
+    },
+    {
       "name": "yuki.zk.ip",
       "type": "java.lang.String",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk"
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
     },
     {
       "name": "yuki.zk.port",
       "type": "java.lang.Integer",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Zk"
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
     }
   ],
   "hints": []

@@ -14,6 +14,7 @@
         <module name="yuki-nodeServer" />
         <module name="yuki-demo-HttpNodeServer" />
         <module name="yuki-demo-webClient" />
+        <module name="yuki-registry-zookeeper" />
         <module name="yuki-transport-netty" />
         <module name="yuki-transport-api" />
         <module name="yuki-spring-boot-autoconfigure" />

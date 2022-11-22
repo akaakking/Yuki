@@ -1,5 +1,6 @@
 package org.xulinux.yuki.nodeServer;
 
+import io.netty.bootstrap.Bootstrap;
 import org.xulinux.yuki.common.Listenner;
 import org.xulinux.yuki.common.Speaker;
 import org.xulinux.yuki.common.fileUtil.FileUtil;
@@ -27,18 +28,17 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date 2022/10/10 下午5:40
  */
 public class NodeServer implements Speaker {
+    private final static String id2PathFilePath = "id2path.log";
 
+    /**
+     * 资源id -> 资源path
+     */
     private static final ConcurrentHashMap<String, String> id2path = new ConcurrentHashMap<>();
 
     /**
-     * zk 句柄
-     * spi ?
-     * springboot ?
+     * 注册中心的客户端，用来资源发现
      */
     private RegistryClient registryClient;
-
-    private LoadBalance balance;
-
     private List<Listenner> listenners;
 
     private volatile boolean start;
@@ -47,11 +47,7 @@ public class NodeServer implements Speaker {
 
     private TransportClient transportClient;
 
-    // set
-    private String zkIp;
-
-    // set
-    private int zkPort;
+    private String hostString;
 
     // set
     private String aofPath;
@@ -64,17 +60,11 @@ public class NodeServer implements Speaker {
 
     public NodeServer() {
         listenners = new ArrayList<>();
-        balance = ExtensionLoader.getExtension(LoadBalance.class);
         transportClient = ExtensionLoader.getExtension(TransportClient.class);
     }
 
     private void ininID2Path() {
-        if (aofPath == null) {
-            // todo trow
-            return;
-        }
-
-        File file = new File(aofPath);
+        File file = new File(aofPath + "/" + id2PathFilePath);
 
         if (!file.exists()) {
             try {
@@ -94,17 +84,14 @@ public class NodeServer implements Speaker {
         }
     }
 
+    public void setHostString(String hostString) {
+        this.hostString = hostString;
+    }
 
     private void ininTransportServer() {
         transportServer = ExtensionLoader.getExtension(TransportServer.class);
 
         transportServer.setPort(nodeInfo.getPort());
-    }
-
-    private void ininRegistryClient() {
-        this.registryClient = ExtensionLoader.getExtension(RegistryClient.class);
-
-        registryClient.setRegistryHost(zkIp,zkPort);
     }
 
     public void setAofPath(String aofPath) {
@@ -121,14 +108,6 @@ public class NodeServer implements Speaker {
 
     public boolean isStart() {
         return start;
-    }
-
-    public void setZkIp(String zkIp) {
-        this.zkIp = zkIp;
-    }
-
-    public void setZkPort(int zkPort) {
-        this.zkPort = zkPort;
     }
 
     public void exportService() {
@@ -153,7 +132,6 @@ public class NodeServer implements Speaker {
 
     public void ininServer() {
         ininID2Path();
-        ininRegistryClient();
         ininTransportServer();
     }
 
@@ -204,6 +182,8 @@ public class NodeServer implements Speaker {
         sb.append("有 " + resourceHolders.size() + " 个资源拥有者\n");
 
         int maxReceive = nodeInfo.getMaxServicing();
+
+        LoadBalance balance = ExtensionLoader.getExtension(LoadBalance.class);
 
         resourceHolders = balance.select(resourceHolders,maxReceive);
 

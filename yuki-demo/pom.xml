@@ -12,8 +12,6 @@
     <artifactId>yuki-demo</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>yuki-demo-bs</module>
-        <module>yuki-demo-console</module>
         <module>yuki-demo-HttpNodeServer</module>
         <module>yuki-demo-telnetServer</module>
         <module>yuki-demo-webClient</module>

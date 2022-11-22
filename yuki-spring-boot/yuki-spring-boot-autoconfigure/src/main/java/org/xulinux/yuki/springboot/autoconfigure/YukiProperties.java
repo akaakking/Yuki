@@ -16,7 +16,7 @@ public class YukiProperties {
 
     private int maxServicing;
 
-    private Zk zk;
+    private Registry registry;
 
     public String getAofPath() {
         return aofPath;
@@ -42,7 +42,7 @@ public class YukiProperties {
         this.port = port;
     }
 
-    public static class Zk {
+    public static class Registry {
         private String ip;
         private int port;
 
@@ -63,12 +63,12 @@ public class YukiProperties {
         }
     }
 
-    public void setZk(Zk zk) {
-        this.zk = zk;
+    public Registry getRegistry() {
+        return registry;
     }
 
-    public Zk getZk() {
-        return zk;
+    public void setRegistry(Registry registry) {
+        this.registry = registry;
     }
 
     @Override
@@ -77,7 +77,7 @@ public class YukiProperties {
                 "port=" + port +
                 ", aofPath='" + aofPath + '\'' +
                 ", maxServicing=" + maxServicing +
-                ", zk=" + zk +
+                ", registry=" + registry +
                 '}';
     }
 }

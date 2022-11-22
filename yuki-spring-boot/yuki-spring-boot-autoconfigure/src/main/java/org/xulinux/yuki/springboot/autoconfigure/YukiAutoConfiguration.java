@@ -34,11 +34,10 @@ public class YukiAutoConfiguration {
         NodeServer nodeServer = new NodeServer();
 
         // zk
-        YukiProperties.Zk zk = yukiProperties.getZk();
-        String zkIp = zk.getIp();
-        int zkPort = zk.getPort();
-        nodeServer.setZkIp(zkIp);
-        nodeServer.setZkPort(zkPort);
+        YukiProperties.Registry registry = yukiProperties.getRegistry();
+        String registryIp = registry.getIp();
+        int registryPort = registry.getPort();
+        nodeServer.setHostString(registryIp + ":" + registryPort);
 
         // nodeinfo
         int nodePort = yukiProperties.getPort();
