@@ -34,13 +34,40 @@ public class FileUtil {
     public static void writeLine(String path, String line) {
         File file = new File(path);
 
+        writeLine(file,line);
+    }
+
+    public static void writeLine(File file, int num) {
+        writeLine(file,String.valueOf(num));
+    }
+
+
+    public static void writeLine(File file, String line) {
+        FileWriter fileWriter = null;
+        BufferedWriter bufferedWriter = null;
         try {
-            FileWriter fileWriter = new FileWriter(file);
-            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            fileWriter = new FileWriter(file,true);
+            bufferedWriter = new BufferedWriter(fileWriter);
 
             bufferedWriter.write(line + "\n");
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (bufferedWriter != null) {
+                try {
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (fileWriter != null) {
+                try {
+                    fileWriter.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

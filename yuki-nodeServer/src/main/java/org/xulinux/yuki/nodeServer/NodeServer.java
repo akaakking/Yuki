@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NodeServer implements Speaker {
     private final static String id2PathFilePath = "id2path.log";
 
+    private boolean hasDowntime;
+
     /**
      * 资源id -> 资源path
      */
@@ -82,6 +84,28 @@ public class NodeServer implements Speaker {
 
             id2path.put(kv[0],kv[1]);
         }
+    }
+
+
+    public void checkDowntime() {
+        File file = new File(this.aofPath);
+        String[] list = file.list();
+
+        if (list != null && list.length > 1 ) {
+            this.speak("由于上次宕机，存在未传输完成资源，是否继续传输（y/n）\n");
+            this.hasDowntime = true;
+        }
+    }
+
+    public boolean hasDowntime() {
+        return hasDowntime;
+    }
+
+    public void resumeTransmission() {
+        this.transportClient.resumeTransmission();
+    }
+    public void rmLogAndResource() {
+        this.transportClient.rmLogAndResource();
     }
 
     public void setHostString(String hostString) {
@@ -168,7 +192,12 @@ public class NodeServer implements Speaker {
     /**
      * 下载 资源
      */
-    public void download(String resourceId) {
+    public void download(String resourceId,String dowDir) {
+        if (!new File(dowDir).exists()) {
+            this.speak("bu");
+            return;
+        }
+
         this.speak("准备下载资源[" + resourceId + "]");
 
         List<NodeInfo> resourceHolders = registryClient.getResouceHolders(resourceId);

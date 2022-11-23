@@ -2,12 +2,11 @@ package org.xulinux.yuki.transport.handler;
 
 import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
-import org.xulinux.yuki.common.recorder.Recorder;
+import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
@@ -17,6 +16,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 /**
  *  不可共享
@@ -27,7 +27,11 @@ import java.util.List;
 public class ClientDecoder extends ByteToMessageDecoder {
     private List<NodeInfo> nodeInfos;
     private ResourceMetadata metadata;
-    private Recorder recorder;
+    private FileReceiveRecorder recorder;
+
+    private CountDownLatch countDownLatch;
+
+    private int nodeNum;
 
     private List<FileSectionInfo> fileSectionInfos;
 
@@ -50,6 +54,10 @@ public class ClientDecoder extends ByteToMessageDecoder {
         this.nodeInfos = nodeInfos;
     }
 
+    public void setCountDownLatch(CountDownLatch countDownLatch) {
+        this.countDownLatch = countDownLatch;
+    }
+
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
         switch (state) {
@@ -62,6 +70,10 @@ public class ClientDecoder extends ByteToMessageDecoder {
             default:
                 break;
         }
+    }
+
+    public void setNodeNum(int nodeNum) {
+        this.nodeNum = nodeNum;
     }
 
     private void writeToDisk(ByteBuf byteBuf) throws IOException {
@@ -83,7 +95,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
     }
 
-    public void setRecorder(Recorder recorder) {
+    public void setRecorder(FileReceiveRecorder recorder) {
         this.recorder = recorder;
     }
 

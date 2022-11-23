@@ -3,22 +3,18 @@ package org.xulinux.yuki.transport.client;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
+import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 import org.xulinux.yuki.transport.TransportClient;
 import org.xulinux.yuki.transport.handler.ClientDecoder;
 import org.xulinux.yuki.transport.handler.Encoder;
-import org.xulinux.yuki.transport.handler.MetadataRequestHandler;
 import org.xulinux.yuki.transport.handler.MetadataResponseHandler;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.io.File;
 import java.util.List;
-import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * mutiClient
@@ -30,6 +26,7 @@ public class NettyTransportClient implements TransportClient {
     private EventLoopGroup eventLoopGroup;
     private volatile Bootstrap bootstrap;
     private List<NodeInfo> nodeInfos;
+    private CountDownLatch countDownLatch;
     private String resourceId;
 
     public NettyTransportClient() {
@@ -49,6 +46,7 @@ public class NettyTransportClient implements TransportClient {
         this.resourceId = resourceId;
         int recipientsCount = recipients.size();
 
+        this.countDownLatch = new CountDownLatch(recipientsCount);
         // 客户端这边Nioenventloop是个什么东西啊。
         ininBootstrap(recipientsCount);
 
@@ -64,11 +62,36 @@ public class NettyTransportClient implements TransportClient {
 
             connect.channel().writeAndFlush(message);
 
-            connect.channel().closeFuture().sync();
+            countDownLatch.await();
+
+            // TODO 全部结束关闭netty 等等等。。。。。
+            close();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } finally {
             close();
+        }
+    }
+
+    /**
+     * 开启续传
+     */
+    @Override
+    public void resumeTransmission() {
+
+    }
+
+    /**
+     * 删除续传log
+     */
+    @Override
+    public void rmLogAndResource() {
+        File aofDir = new File(ResourcePathRecorder.getAofDirPath());
+
+        File[] file = aofDir.listFiles(f -> !f.getName().equals(ResourcePathRecorder.id2pathFileName));
+
+        for (File f : file) {
+
         }
     }
 
@@ -91,6 +114,7 @@ public class NettyTransportClient implements TransportClient {
             protected void initChannel(NioSocketChannel channel) throws Exception {
                 ClientDecoder clientDecoder = new ClientDecoder();
                 clientDecoder.setNodeInfos(nodeInfos);
+                clientDecoder.setCountDownLatch(countDownLatch);
 
                 channel.pipeline().addLast(encoder);
                 channel.pipeline().addLast(clientDecoder);
@@ -101,9 +125,5 @@ public class NettyTransportClient implements TransportClient {
 
     public void close() {
         eventLoopGroup.shutdownGracefully();
-    }
-
-    void mi() {
-
     }
 }

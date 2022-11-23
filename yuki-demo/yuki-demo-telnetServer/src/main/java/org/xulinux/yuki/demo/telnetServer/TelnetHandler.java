@@ -31,11 +31,15 @@ public class TelnetHandler extends SimpleChannelInboundHandler<String> implement
         ctx.writeAndFlush(PROTMT);
     }
 
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        this.ctx = ctx;
         CommandExecutor.setNodeServer(nodeServer);
         CommandExecutor.setCtx(ctx);
-        ctx.writeAndFlush(YUKI.YUKI_LOGO + "\r\n" + PROTMT);
+        ctx.writeAndFlush(YUKI.YUKI_LOGO + "\r\n");
+        nodeServer.checkDowntime();
+        ctx.writeAndFlush(PROTMT);
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.nodeServer.NodeServer;
 import org.xulinux.yuki.registry.NodeInfo;
 
@@ -59,6 +60,7 @@ public class YukiAutoConfiguration {
         // 持久化
         String aofPath = yukiProperties.getAofPath();
         nodeServer.setAofPath(aofPath);
+        ResourcePathRecorder.setAofDirPath(aofPath);
 
         return nodeServer;
     }

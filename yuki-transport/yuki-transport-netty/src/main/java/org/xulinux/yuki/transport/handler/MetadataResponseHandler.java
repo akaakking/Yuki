@@ -1,11 +1,10 @@
 package org.xulinux.yuki.transport.handler;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
-import org.xulinux.yuki.common.recorder.Recorder;
+import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
@@ -17,9 +16,7 @@ import java.util.List;
  * @Author wfh
  * @Date 2022/10/26 上午10:30
  */
-@ChannelHandler.Sharable
 public class MetadataResponseHandler extends SimpleChannelInboundHandler<ResourceMetadata> {
-    // 还有一个需要考虑的点就是遍历的时候，我这个是arraylist所以下标遍历起来很快的，如果是linklist会很慢
     private List<NodeInfo> nodeInfos;
     private Bootstrap bootstrap;
     private String resourceId;
@@ -31,26 +28,27 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         // connect and request
         List<List<FileSectionInfo>> sections = resourceMetadata.split(nodeInfos.size());
 
-        sendJob(ctx.channel(),sections.get(0));
+        sendJob(ctx.channel(),sections.get(0),0);
 
         for (int i = 1; i < nodeInfos.size(); i++) {
             NodeInfo nodeInfo = nodeInfos.get(i);
             ChannelFuture connect = bootstrap.connect(nodeInfo.getIp(), nodeInfo.getPort());
             final List<FileSectionInfo> fileSectionInfos = sections.get(i);
+            final int nodeNum = i;
 
             connect.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    sendJob(channelFuture.channel(),fileSectionInfos);
+                    sendJob(channelFuture.channel(),fileSectionInfos,nodeNum);
                 }
             });
         }
     }
 
     // 将任务发送给对端同时在自己接收这边做了设置
-    private void sendJob(Channel ch, List<FileSectionInfo> fileSectionInfos) {
+    private void sendJob(Channel ch, List<FileSectionInfo> fileSectionInfos, int nodeNum) {
         ch.pipeline().get(ClientDecoder.class).setFileSectionInfos(fileSectionInfos);
-        ch.pipeline().get(ClientDecoder.class).setRecorder(new Recorder(fileSectionInfos));
+        ch.pipeline().get(ClientDecoder.class).setRecorder(new FileReceiveRecorder(fileSectionInfos,resourceId,nodeNum));
 
         Message message = new Message();
         message.setType(Message.Type.FILE_SECTION_ASSIGN);

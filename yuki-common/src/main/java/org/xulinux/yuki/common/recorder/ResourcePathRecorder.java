@@ -14,20 +14,24 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Date 2022/11/22 下午9:18
  */
 public class ResourcePathRecorder {
-    private static final String id2pathFileName = "id2path.log";
+    public static final String id2pathFileName = "id2path.log";
 
     private static final ConcurrentHashMap<String,String> id2path = new ConcurrentHashMap<>();
 
-    private static String aofPath;
+    private static String aofDirPath;
 
     public static void record(String resourceId,String resourcePath) {
-        FileUtil.writeLine(aofPath + "/" + id2pathFileName,resourceId + "%" + resourcePath);
+        FileUtil.writeLine(aofDirPath + "/" + id2pathFileName,resourceId + "%" + resourcePath);
 
         id2path.put(resourceId,resourcePath);
     }
 
+    public static String getAofDirPath() {
+        return aofDirPath;
+    }
+
     public static void initMap() {
-        File file = new File(aofPath + "/" + id2pathFileName);
+        File file = new File(aofDirPath + "/" + id2pathFileName);
 
         if (!file.exists()) {
             try {
@@ -46,7 +50,7 @@ public class ResourcePathRecorder {
         }
     }
 
-    public static void setAofPath(String aofPath) {
-        ResourcePathRecorder.aofPath = aofPath;
+    public static void setAofDirPath(String aofDirPath) {
+        ResourcePathRecorder.aofDirPath = aofDirPath;
     }
 }

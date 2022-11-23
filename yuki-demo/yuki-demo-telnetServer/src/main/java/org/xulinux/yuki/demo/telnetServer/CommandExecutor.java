@@ -35,8 +35,24 @@ public class CommandExecutor  {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        } else if (message.equalsIgnoreCase("y") || message.equalsIgnoreCase("n")) {
+            dealDowntime(message);
         } else {
            withoutCommand(message);
+        }
+    }
+
+    public static void dealDowntime(String message) {
+        if (!nodeServer.hasDowntime()) {
+            withoutCommand(message);
+        }
+
+        if (message.equalsIgnoreCase("y")) {
+            // 断点续传
+            nodeServer.resumeTransmission();
+        } else {
+            // 删除log
+            nodeServer.rmLogAndResource();
         }
     }
 
@@ -65,10 +81,12 @@ public class CommandExecutor  {
 
     }
 
+    // download resouceid to dir
     private static void download(String message) {
-        String resourceId = message.replace("download","").trim();
+        String resourceId = message.substring("download ".length(), message.lastIndexOf("to")).trim();
+        String downDir = message.substring(message.lastIndexOf("to") + 2).trim();
 
-        nodeServer.download(resourceId);
+        nodeServer.download(resourceId,downDir);
     }
 
     private static void withoutCommand(String message) {
