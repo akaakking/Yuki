@@ -13,7 +13,7 @@ import java.util.List;
 public interface TransportClient {
 
     // 可不可以搞成异步的呢？
-    void download(String resourceId, List<NodeInfo> resouceHolders);
+    void download(String resourceId, List<NodeInfo> resouceHolders,String downDir);
     // todo
     void resumeTransmission();
     void rmLogAndResource();

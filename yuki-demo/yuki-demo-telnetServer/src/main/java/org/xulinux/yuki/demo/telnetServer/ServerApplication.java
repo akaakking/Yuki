@@ -25,13 +25,12 @@ import org.xulinux.yuki.nodeServer.NodeServer;
 public class ServerApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(ServerApplication.class, args);
-        Environment environment = context.getBean(Environment.class);
         NodeServer nodeServer  = context.getBean(NodeServer.class);
 
-        int port = Integer.parseInt(environment.getProperty("yuki.telnet.port"));
+
 
         TelnetNettyServer telnetNettyServer = new TelnetNettyServer(nodeServer);
         System.out.println(nodeServer);
-        telnetNettyServer.start(port);
+        telnetNettyServer.start(54188);
     }
 }

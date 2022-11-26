@@ -4,6 +4,7 @@ import io.netty.bootstrap.Bootstrap;
 import org.xulinux.yuki.common.Listenner;
 import org.xulinux.yuki.common.Speaker;
 import org.xulinux.yuki.common.fileUtil.FileUtil;
+import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.common.spi.ExtensionLoader;
 import org.xulinux.yuki.registry.LoadBalance;
 import org.xulinux.yuki.registry.NodeInfo;
@@ -28,8 +29,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Date 2022/10/10 下午5:40
  */
 public class NodeServer implements Speaker {
-    private final static String id2PathFilePath = "id2path.log";
-
     private boolean hasDowntime;
 
     /**
@@ -66,7 +65,7 @@ public class NodeServer implements Speaker {
     }
 
     private void ininID2Path() {
-        File file = new File(aofPath + "/" + id2PathFilePath);
+        File file = new File(aofPath + "/" + ResourcePathRecorder.id2pathFileName);
 
         if (!file.exists()) {
             try {
@@ -192,9 +191,9 @@ public class NodeServer implements Speaker {
     /**
      * 下载 资源
      */
-    public void download(String resourceId,String dowDir) {
-        if (!new File(dowDir).exists()) {
-            this.speak("bu");
+    public void download(String resourceId,String downDir) {
+        if (!new File(downDir).exists()) {
+            this.speak("本机不存在目录：" + downDir);
             return;
         }
 
@@ -225,7 +224,7 @@ public class NodeServer implements Speaker {
         this.speak(sb.toString());
 
         this.speak("正在向资源拥有者们请求....");
-        transportClient.download(resourceId,resourceHolders);
+        transportClient.download(resourceId,resourceHolders,downDir);
         this.speak("文件下载成功！");
 
         this.speak("正在注册服务...");

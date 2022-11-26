@@ -20,10 +20,11 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
     private List<NodeInfo> nodeInfos;
     private Bootstrap bootstrap;
     private String resourceId;
+    private String downDir;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ResourceMetadata resourceMetadata) throws Exception {
-        // todo create dir
+        resourceMetadata.creatDir(downDir);
 
         // connect and request
         List<List<FileSectionInfo>> sections = resourceMetadata.split(nodeInfos.size());
@@ -45,10 +46,17 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         }
     }
 
+
+    public void setDownDir(String downDir) {
+        this.downDir = downDir;
+    }
+
     // 将任务发送给对端同时在自己接收这边做了设置
     private void sendJob(Channel ch, List<FileSectionInfo> fileSectionInfos, int nodeNum) {
-        ch.pipeline().get(ClientDecoder.class).setFileSectionInfos(fileSectionInfos);
-        ch.pipeline().get(ClientDecoder.class).setRecorder(new FileReceiveRecorder(fileSectionInfos,resourceId,nodeNum));
+        ch.pipeline().get(ClientDecoder.class)
+                .setFileSectionInfos(fileSectionInfos);
+        ch.pipeline().get(ClientDecoder.class)
+                .setRecorder(new FileReceiveRecorder(fileSectionInfos,resourceId,nodeNum,downDir));
 
         Message message = new Message();
         message.setType(Message.Type.FILE_SECTION_ASSIGN);

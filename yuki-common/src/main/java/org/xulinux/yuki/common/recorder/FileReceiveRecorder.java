@@ -23,6 +23,8 @@ public class FileReceiveRecorder {
 
     private int count;
 
+    private String downDir;
+
     private File aofFile;
 
     private List<FileSectionInfo> sectionInfos;
@@ -36,7 +38,8 @@ public class FileReceiveRecorder {
     public FileReceiveRecorder(String path) {
         this.aofFile = new File(path);
         List<String> logs = FileUtil.readList(path);
-        List<FileSectionInfo> sectionInfos = (List<FileSectionInfo>) JSON.parse(logs.get(0));
+        this.downDir = logs.get(0);
+        List<FileSectionInfo> sectionInfos = (List<FileSectionInfo>) JSON.parse(logs.get(1));
 
         rollBack(sectionInfos,logs);
     }
@@ -44,7 +47,7 @@ public class FileReceiveRecorder {
     private void rollBack(List<FileSectionInfo> sectionInfos, List<String> logs) {
         long transfered = 0;
 
-        for (int i = 0; i < logs.size(); i++) {
+        for (int i = 2; i < logs.size(); i++) {
             transfered += Integer.valueOf(logs.get(i));
         }
 
@@ -65,7 +68,8 @@ public class FileReceiveRecorder {
         calculateTotalSize(sectionInfos);
     }
 
-    public FileReceiveRecorder(List<FileSectionInfo> sectionInfos,String resourceId, int numOfNode) {
+    public FileReceiveRecorder(List<FileSectionInfo> sectionInfos,String resourceId, int numOfNode,String downDir) {
+        this.downDir = downDir;
         this.numOfNode = numOfNode;
         this.sectionInfos = new ArrayList<>();
         this.totalSize = new AtomicLong();
@@ -110,11 +114,23 @@ public class FileReceiveRecorder {
         }
     }
 
+    /**
+     * basedir
+     * resourceid
+     * List<FileSectionInfo>
+     * count
+     *
+     * @param count
+     */
+
+    // 持久化传输了多少字节
     private void persistence(int count) {
         FileUtil.writeLine(aofFile,count);
     }
 
+    // 持久化整个列表
     private void persistence(List<FileSectionInfo> sectionInfos) {
+        FileUtil.writeLine(aofFile,downDir);
         String str = JSON.toJSONString(sectionInfos);
         FileUtil.writeLine(aofFile,str);
     }

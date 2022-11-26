@@ -45,6 +45,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
     private State state;
 
     private String baseDir;
+    private int fileSectionIndex;
 
     public ClientDecoder() {
         state = State.HEAD_PARSE;
@@ -82,7 +83,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
         ByteBuffer buffer = byteBuf.internalNioBuffer(byteBuf.readerIndex(),readsize);
         byteBuf.skipBytes(readsize);
 
-        // 零拷贝都是针对发送而言的吗，接受这边不可以用？
         raf.getChannel().write(buffer);
 
         recorder.record(readsize);
@@ -90,8 +90,13 @@ public class ClientDecoder extends ByteToMessageDecoder {
         sectionLength -= readsize;
 
         if (sectionLength == 0) {
+            // todo raf 有可能未关闭
             raf.close();
             this.state = State.HEAD_PARSE;
+
+            if (fileSectionIndex == fileSectionInfos.size() - 1) {
+                countDownLatch.countDown();
+            }
         }
     }
 
@@ -130,10 +135,9 @@ public class ClientDecoder extends ByteToMessageDecoder {
     }
 
     private void setFileSection(int fileSectionIndex) {
+        this.fileSectionIndex = fileSectionIndex;
         currSection = fileSectionInfos.get(fileSectionIndex);
         sectionLength = currSection.getLength();
-
-        recorder.setFile(fileSectionIndex);
 
         try {
             raf = new RandomAccessFile(baseDir + currSection.getDirPath() + currSection.getFileName(),"rw");
@@ -141,7 +145,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
 
             recorder.setFile(fileSectionIndex);
         } catch (FileNotFoundException e) {
-            // 没有就创建了，为什么会这样嘞
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();

@@ -12,20 +12,61 @@ import java.util.List;
  */
 public class FileUtil {
     public static List<String> readList(String path) {
-        List<String> list = new ArrayList<>();
+        return readList(new File(path));
+    }
 
-        File file = new File(path);
-
+    public static String readOneLine(File file) {
+        BufferedReader bufferedReader = null;
         try {
-
             FileReader reader = new FileReader(file);
-            BufferedReader bufferedReader = new BufferedReader(reader);
-            list.add(bufferedReader.readLine());
+            bufferedReader = new BufferedReader(reader);
+
+            return bufferedReader.readLine();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+        return null;
+    }
+
+    public String readOneLine(String path) {
+        return readOneLine(new File(path));
+    }
+
+    public static List<String> readList(File file) {
+        List<String> list = new ArrayList<>();
+        BufferedReader bufferedReader = null;
+        try {
+            FileReader reader = new FileReader(file);
+            bufferedReader = new BufferedReader(reader);
+
+            String s = bufferedReader.readLine();
+            while (s != null) {
+                list.add(s);
+                s = bufferedReader.readLine();
+            }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
 
         return list;

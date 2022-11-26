@@ -4,6 +4,8 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import org.apache.commons.io.FileUtils;
+import org.xulinux.yuki.common.fileUtil.FileUtil;
 import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
@@ -13,6 +15,7 @@ import org.xulinux.yuki.transport.handler.Encoder;
 import org.xulinux.yuki.transport.handler.MetadataResponseHandler;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -28,26 +31,20 @@ public class NettyTransportClient implements TransportClient {
     private List<NodeInfo> nodeInfos;
     private CountDownLatch countDownLatch;
     private String resourceId;
+    private String downDir;
 
     public NettyTransportClient() {
     }
 
-    /**
-     * 断点续传。
-     * 先不考虑对面节点假死的情况，也就是不做计时相关的东西。
-     * 但是做try catch 相关吧。
-     *
-     * @param resourceId
-     * @param recipients
-     */
     @Override
-    public void download(String resourceId, List<NodeInfo> recipients /* 接受者*/) {
+    public void download(String resourceId, List<NodeInfo> recipients, String downDir) {
+        this.downDir = downDir;
         nodeInfos = recipients;
         this.resourceId = resourceId;
         int recipientsCount = recipients.size();
 
         this.countDownLatch = new CountDownLatch(recipientsCount);
-        // 客户端这边Nioenventloop是个什么东西啊。
+
         ininBootstrap(recipientsCount);
 
         NodeInfo nodeInfo = recipients.get(0);
@@ -63,7 +60,7 @@ public class NettyTransportClient implements TransportClient {
             connect.channel().writeAndFlush(message);
 
             countDownLatch.await();
-
+            rmLogs(resourceId);
             // TODO 全部结束关闭netty 等等等。。。。。
             close();
         } catch (InterruptedException e) {
@@ -73,8 +70,20 @@ public class NettyTransportClient implements TransportClient {
         }
     }
 
+    private void rmLogs(String resourceId) {
+        String aofDirPath = ResourcePathRecorder.getAofDirPath();
+
+        File file = new File(aofDirPath);
+
+        File[] files = file.listFiles(f -> f.getName().startsWith(resourceId));
+
+        for (File f : files) {
+            f.delete();
+        }
+    }
+
     /**
-     * 开启续传
+     * 开启续传,两种情况提前设计
      */
     @Override
     public void resumeTransmission() {
@@ -88,19 +97,33 @@ public class NettyTransportClient implements TransportClient {
     public void rmLogAndResource() {
         File aofDir = new File(ResourcePathRecorder.getAofDirPath());
 
-        File[] file = aofDir.listFiles(f -> !f.getName().equals(ResourcePathRecorder.id2pathFileName));
+        File[] files = aofDir.listFiles(f -> !f.getName().equals(ResourcePathRecorder.id2pathFileName));
 
-        for (File f : file) {
+        String resourceId = files[0].getName();
 
+        String baseDir = FileUtil.readList(files[0]).get(0);
+
+        try {
+            FileUtils.deleteDirectory(new File(baseDir + "/" + resourceId));
+
+            for (File f : files) {
+                FileUtils.deleteDirectory(f);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    // 客户端部分的bootstrap
+    /**
+     * 客户端的bootstrap
+     * @param serverNum
+     */
     private void ininBootstrap(int serverNum) {
         MetadataResponseHandler metadataResponseHandler = new MetadataResponseHandler();
         metadataResponseHandler.setBootstrap(bootstrap);
         metadataResponseHandler.setNodeInfos(nodeInfos);
         metadataResponseHandler.setResourceId(resourceId);
+        metadataResponseHandler.setDownDir(downDir);
         Encoder encoder = new Encoder();
 
         eventLoopGroup = new NioEventLoopGroup(serverNum);
@@ -115,6 +138,7 @@ public class NettyTransportClient implements TransportClient {
                 ClientDecoder clientDecoder = new ClientDecoder();
                 clientDecoder.setNodeInfos(nodeInfos);
                 clientDecoder.setCountDownLatch(countDownLatch);
+                clientDecoder.setBaseDir(downDir);
 
                 channel.pipeline().addLast(encoder);
                 channel.pipeline().addLast(clientDecoder);
