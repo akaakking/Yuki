@@ -1,7 +1,12 @@
 package org.xulinux.yuki.transport;
 
-import org.xulinux.yuki.registry.NodeInfo;
+import org.xulinux.yuki.common.JobMetaData;
+import org.xulinux.yuki.common.NodeInfo;
+import org.xulinux.yuki.common.ProgressBar;
+import org.xulinux.yuki.common.Speaker;
 
+import java.io.File;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -13,9 +18,9 @@ import java.util.List;
 public interface TransportClient {
 
     // 可不可以搞成异步的呢？
-    void download(String resourceId, List<NodeInfo> resouceHolders,String downDir);
+    void download(List<NodeInfo> resouceHolders, JobMetaData jobMetaData, ProgressBar progressBar);
     // todo
-    void resumeTransmission();
+    void resumeTransmission(List<NodeInfo> resouceHolders, File[] logs);
     void rmLogAndResource();
 }
 

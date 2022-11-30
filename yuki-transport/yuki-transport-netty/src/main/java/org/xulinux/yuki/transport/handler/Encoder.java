@@ -1,9 +1,9 @@
 package org.xulinux.yuki.transport.handler;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
+import org.xulinux.yuki.common.BeanUtil;
 import org.xulinux.yuki.transport.Message;
 
 import java.nio.charset.StandardCharsets;
@@ -18,10 +18,11 @@ public class Encoder extends MessageToByteEncoder<Message> {
 
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Message message, ByteBuf byteBuf) throws Exception {
-        String json = JSON.toJSONString(message);
-        byteBuf.writeInt(json.length());
+        String json = BeanUtil.getGson().toJson(message);
 
-        byteBuf.writeBytes(json.getBytes(StandardCharsets.UTF_8));
+        byte[] bytes = json.getBytes(StandardCharsets.UTF_8);
+        byteBuf.writeInt(bytes.length);
+        byteBuf.writeBytes(bytes);
     }
 }
 

@@ -53,6 +53,13 @@ public class FileSectionInfo {
         return fileInfo;
     }
 
+    public int receiveAndGet(int received) {
+        this.offset += received;
+        this.length -= received;
+
+        return this.length;
+    }
+
     public void receive(int received) {
         this.offset += received;
         this.length -= received;

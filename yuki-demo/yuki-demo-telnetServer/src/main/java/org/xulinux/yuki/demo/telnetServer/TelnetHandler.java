@@ -24,8 +24,6 @@ public class TelnetHandler extends SimpleChannelInboundHandler<String> implement
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String message) throws Exception {
-        this.ctx = ctx;
-
         CommandExecutor.execute(message);
 
         ctx.writeAndFlush(PROTMT);
@@ -44,6 +42,10 @@ public class TelnetHandler extends SimpleChannelInboundHandler<String> implement
 
     @Override
     public void messageFromSpeaker(String message) {
-        this.ctx.writeAndFlush(message + "\r\n");
+        if (message.startsWith("\r")) {
+            this.ctx.writeAndFlush(message);
+        } else {
+            this.ctx.writeAndFlush("      " + message + "\n");
+        }
     }
 }

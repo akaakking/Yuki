@@ -27,7 +27,7 @@ public class ResourcePathRecorder {
     }
 
     public static String getAofDirPath() {
-        return aofDirPath;
+        return aofDirPath + "/";
     }
 
     public static void initMap() {

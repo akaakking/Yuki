@@ -1,4 +1,4 @@
-package org.xulinux.yuki.registry;
+package org.xulinux.yuki.common;
 
 /**
  * //TODO add class commment here
@@ -22,6 +22,10 @@ public class NodeInfo  {
     }
 
     public NodeInfo() {
+    }
+
+    public String getHostString() {
+        return this.ip + ":" + this.port;
     }
 
     public NodeInfo(String nodeString) {

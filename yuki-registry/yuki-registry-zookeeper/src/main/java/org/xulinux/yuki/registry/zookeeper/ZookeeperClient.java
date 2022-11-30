@@ -4,7 +4,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.CreateMode;
-import org.xulinux.yuki.registry.NodeInfo;
+import org.xulinux.yuki.common.NodeInfo;
 import org.xulinux.yuki.registry.RegistryClient;
 
 import java.util.ArrayList;
@@ -30,10 +30,12 @@ public class ZookeeperClient implements RegistryClient {
     }
 
     @Override
-    public void connect() {
+    public void connect(String ip, int port) {
         //调用工厂类CuratorFrameworkFactory的静态newClient()方法
         //第一个参数：ZK的连接地址
         //第二个参数：重试策略
+        this.ip = ip;
+        this.port = port;
         String connectString = ip == null ? "127.0.0.1:2181" : ip + ":" + port;
 
         client = CuratorFrameworkFactory.newClient(
@@ -101,12 +103,6 @@ public class ZookeeperClient implements RegistryClient {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void setRegistryHost(String ip, int port) {
-        setIp(ip);
-        setPort(port);
     }
 
 

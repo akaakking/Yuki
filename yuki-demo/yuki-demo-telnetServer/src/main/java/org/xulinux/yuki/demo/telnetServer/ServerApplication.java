@@ -3,7 +3,6 @@ package org.xulinux.yuki.demo.telnetServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.Environment;
 import org.xulinux.yuki.nodeServer.NodeServer;
 
 /**
@@ -27,10 +26,7 @@ public class ServerApplication {
         ConfigurableApplicationContext context = SpringApplication.run(ServerApplication.class, args);
         NodeServer nodeServer  = context.getBean(NodeServer.class);
 
-
-
         TelnetNettyServer telnetNettyServer = new TelnetNettyServer(nodeServer);
-        System.out.println(nodeServer);
-        telnetNettyServer.start(54188);
+        telnetNettyServer.start(54199);
     }
 }

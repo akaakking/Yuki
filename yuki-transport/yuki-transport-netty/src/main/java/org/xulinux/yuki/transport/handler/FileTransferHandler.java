@@ -23,8 +23,12 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
     private int chunksize = 1 << (10 + 3);
     private AtomicInteger transCount;
 
-    public void setTransCount(AtomicInteger transCount) {
+    public FileTransferHandler(AtomicInteger transCount) {
         this.transCount = transCount;
+    }
+
+    public void setId2path(ConcurrentHashMap<String, String> id2path) {
+        this.id2path = id2path;
     }
 
     @Override

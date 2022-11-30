@@ -2,10 +2,12 @@ package org.xulinux.yuki.transport.handler;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
+import org.xulinux.yuki.common.JobMetaData;
+import org.xulinux.yuki.common.ProgressBar;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
 import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
-import org.xulinux.yuki.registry.NodeInfo;
+import org.xulinux.yuki.common.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
 import java.util.List;
@@ -19,17 +21,18 @@ import java.util.List;
 public class MetadataResponseHandler extends SimpleChannelInboundHandler<ResourceMetadata> {
     private List<NodeInfo> nodeInfos;
     private Bootstrap bootstrap;
-    private String resourceId;
-    private String downDir;
+
+    private JobMetaData jobMetaData;
+
+    private ProgressBar progressBar;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ResourceMetadata resourceMetadata) throws Exception {
-        resourceMetadata.creatDir(downDir);
+        resourceMetadata.creatDir(jobMetaData.getDownDir());
 
         // connect and request
         List<List<FileSectionInfo>> sections = resourceMetadata.split(nodeInfos.size());
-
-        sendJob(ctx.channel(),sections.get(0),0);
+        sendJob(ctx.channel(), jobMetaData, nodeInfos.get(0), sections.get(0));
 
         for (int i = 1; i < nodeInfos.size(); i++) {
             NodeInfo nodeInfo = nodeInfos.get(i);
@@ -37,33 +40,24 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
             final List<FileSectionInfo> fileSectionInfos = sections.get(i);
             final int nodeNum = i;
 
-            connect.addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture channelFuture) throws Exception {
-                    sendJob(channelFuture.channel(),fileSectionInfos,nodeNum);
-                }
-            });
+            connect.addListener((ChannelFutureListener) channelFuture ->
+                    sendJob(channelFuture.channel(),jobMetaData, nodeInfos.get(nodeNum),fileSectionInfos));
         }
     }
 
-
-    public void setDownDir(String downDir) {
-        this.downDir = downDir;
+    public void sendJob(Channel ch, JobMetaData protoJob, NodeInfo nodeInfo, List<FileSectionInfo> fileSectionInfos) {
+        JobMetaData jobMetaData = protoJob.clone(fileSectionInfos, nodeInfo.getHostString());
+        FileReceiveRecorder recorder = new FileReceiveRecorder(jobMetaData);
+        this.progressBar.add(recorder.getTotalSize());
+        ch.pipeline().get(ClientDecoder.class).sendJob(recorder);
     }
 
-    // 将任务发送给对端同时在自己接收这边做了设置
-    private void sendJob(Channel ch, List<FileSectionInfo> fileSectionInfos, int nodeNum) {
-        ch.pipeline().get(ClientDecoder.class)
-                .setFileSectionInfos(fileSectionInfos);
-        ch.pipeline().get(ClientDecoder.class)
-                .setRecorder(new FileReceiveRecorder(fileSectionInfos,resourceId,nodeNum,downDir));
+    public void setJobMetaData(JobMetaData jobMetaData) {
+        this.jobMetaData = jobMetaData;
+    }
 
-        Message message = new Message();
-        message.setType(Message.Type.FILE_SECTION_ASSIGN);
-        message.setResourceId(resourceId);
-        message.setSectionInfos(fileSectionInfos);
-
-        ch.writeAndFlush(message);
+    public void setProgressBar(ProgressBar progressBar) {
+        this.progressBar = progressBar;
     }
 
     public void setNodeInfos(List<NodeInfo> nodeInfos) {
@@ -74,7 +68,4 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         this.bootstrap = bootstrap;
     }
 
-    public void setResourceId(String resourceId) {
-        this.resourceId = resourceId;
-    }
 }

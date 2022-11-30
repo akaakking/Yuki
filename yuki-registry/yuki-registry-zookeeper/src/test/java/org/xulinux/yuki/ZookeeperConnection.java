@@ -2,14 +2,12 @@ package org.xulinux.yuki;
 
 import org.apache.zookeeper.*;
 import org.junit.Test;
+import org.xulinux.yuki.common.NodeInfo;
 import org.xulinux.yuki.registry.DefaultLoadBalance;
-import org.xulinux.yuki.registry.NodeInfo;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
 
 /**
  * //TODO add class commment here

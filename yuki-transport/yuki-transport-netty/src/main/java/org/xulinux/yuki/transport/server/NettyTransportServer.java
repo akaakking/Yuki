@@ -7,10 +7,12 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import org.xulinux.yuki.transport.TransportServer;
+import org.xulinux.yuki.transport.handler.Encoder;
 import org.xulinux.yuki.transport.handler.FileTransferHandler;
 import org.xulinux.yuki.transport.handler.MetadataRequestHandler;
 import org.xulinux.yuki.transport.handler.ServerDecoder;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -21,12 +23,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class NettyTransportServer implements TransportServer {
     public static final int DEFAULT_SERVER_PORT = 9140;
     private int port;
+
+    private ConcurrentHashMap<String,String> id2path;
     private NioEventLoopGroup bossGroup;
     private NioEventLoopGroup workGroup;
     private AtomicInteger transCount = new AtomicInteger(0);
 
     @Override
-    public void start() {
+    public void start(ConcurrentHashMap<String,String> id2path) {
+        this.id2path = id2path;
         if (bossGroup != null) {
             return;
         }
@@ -44,32 +49,26 @@ public class NettyTransportServer implements TransportServer {
                 .channel(NioServerSocketChannel.class)
                 .localAddress(port)
                 .option(ChannelOption.SO_KEEPALIVE,true)
-                .handler(new ChannelInitializer<SocketChannel>() {
+                .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
+                        // can  share ？
+                        FileTransferHandler fileTransferHandler = new FileTransferHandler(transCount);
+                        fileTransferHandler.setId2path(id2path);
+                        MetadataRequestHandler metadataRequestHandler = new MetadataRequestHandler();
+                        metadataRequestHandler.setId2path(id2path);
+
                         socketChannel.pipeline().addLast(new ChunkedWriteHandler())
+                                .addLast(new Encoder())
                                 .addLast(new ServerDecoder())
-                                .addLast(new MetadataRequestHandler())
-                                .addLast(new FileTransferHandler());
+                                .addLast(metadataRequestHandler)
+                                .addLast(fileTransferHandler);
                     }
                 });
 
-        try {
-            ChannelFuture channelFuture= serverBootstrap.bind().sync();
-
-            ChannelFuture closeFuture = channelFuture.channel().closeFuture();
-
-            closeFuture.sync();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            bossGroup.shutdownGracefully();
-            workGroup.shutdownGracefully();
-        }
+        serverBootstrap.bind(port);
     }
-
-    @Override
+      @Override
     public void terminal() {
         bossGroup.shutdownGracefully();
         workGroup.shutdownGracefully();

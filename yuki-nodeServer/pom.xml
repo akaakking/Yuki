@@ -29,12 +29,13 @@
         </dependency>
         <dependency>
             <groupId>org.xulinux</groupId>
-            <artifactId>yuki-transport-netty</artifactId>
+            <artifactId>yuki-transport-api</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.xulinux</groupId>
-            <artifactId>yuki-transport-api</artifactId>
+            <artifactId>yuki-transport-netty</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

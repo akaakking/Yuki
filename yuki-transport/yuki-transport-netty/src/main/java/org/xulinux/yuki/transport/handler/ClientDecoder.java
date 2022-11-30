@@ -1,13 +1,12 @@
 package org.xulinux.yuki.transport.handler;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.xulinux.yuki.common.BeanUtil;
+import org.xulinux.yuki.common.JobMetaData;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
-import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
 import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
-import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 
 import java.io.FileNotFoundException;
@@ -16,7 +15,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BlockingQueue;
 
 /**
  *  不可共享
@@ -25,42 +24,27 @@ import java.util.concurrent.CountDownLatch;
  * @Date 2022/10/14 上午9:20
  */
 public class ClientDecoder extends ByteToMessageDecoder {
-    private List<NodeInfo> nodeInfos;
-    private ResourceMetadata metadata;
     private FileReceiveRecorder recorder;
-
-    private CountDownLatch countDownLatch;
-
-    private int nodeNum;
-
-    private List<FileSectionInfo> fileSectionInfos;
-
     private FileSectionInfo currSection;
-
     // raf 要不要做个池嘞
     private RandomAccessFile raf;
-
     private int sectionLength;
-
     private State state;
-
-    private String baseDir;
+    private ChannelHandlerContext ctx;
     private int fileSectionIndex;
+
+    private JobMetaData jobMetaData;
+
+    private BlockingQueue<FileReceiveRecorder> waitingJobs;
 
     public ClientDecoder() {
         state = State.HEAD_PARSE;
     }
 
-    public void setNodeInfos(List<NodeInfo> nodeInfos) {
-        this.nodeInfos = nodeInfos;
-    }
 
-    public void setCountDownLatch(CountDownLatch countDownLatch) {
-        this.countDownLatch = countDownLatch;
-    }
 
     @Override
-    protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf byteBuf, List<Object> list) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
         switch (state) {
             case HEAD_PARSE:
                 headParser(byteBuf,list);
@@ -73,11 +57,35 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
     }
 
-    public void setNodeNum(int nodeNum) {
-        this.nodeNum = nodeNum;
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        this.ctx = ctx;
     }
 
-    private void writeToDisk(ByteBuf byteBuf) throws IOException {
+    /**
+     * 要将这个东西看作整个传输的开始
+     * 就是一定要做到高内聚低耦合。
+     */
+    public void sendJob(FileReceiveRecorder recorder) {
+        this.jobMetaData = recorder.getJobMetaData();
+        this.recorder = recorder;
+
+        Message message = new Message();
+        message.setType(Message.Type.FILE_SECTION_ASSIGN);
+        message.setResourceId(jobMetaData.getResourceId());
+        message.setSectionInfos(jobMetaData.getSectionInfos());
+
+        ctx.writeAndFlush(message);
+        reset();
+    }
+
+    private void reset() {
+       this.fileSectionIndex = 0;
+       this.state = State.HEAD_PARSE;
+    }
+
+
+    private void writeToDisk(ByteBuf byteBuf) throws IOException, InterruptedException {
         int readsize = byteBuf.readableBytes() > sectionLength ? byteBuf.readableBytes() : sectionLength;
 
         ByteBuffer buffer = byteBuf.internalNioBuffer(byteBuf.readerIndex(),readsize);
@@ -94,15 +102,17 @@ public class ClientDecoder extends ByteToMessageDecoder {
             raf.close();
             this.state = State.HEAD_PARSE;
 
-            if (fileSectionIndex == fileSectionInfos.size() - 1) {
-                countDownLatch.countDown();
+            // 查看是否完全传输完毕，之后重新复用这条连接
+            if (this.fileSectionIndex == this.jobMetaData.getSectionInfos().size() - 1) {
+                if (!waitingJobs.isEmpty()) {
+                    FileReceiveRecorder receiveRecorderrecorder = waitingJobs.take();
+
+                    sendJob(receiveRecorderrecorder);
+                }
             }
         }
     }
 
-    public void setRecorder(FileReceiveRecorder recorder) {
-        this.recorder = recorder;
-    }
 
     private void headParser(ByteBuf byteBuf, List<Object> list) {
         if (byteBuf.readableBytes() < 4) {
@@ -112,21 +122,21 @@ public class ClientDecoder extends ByteToMessageDecoder {
         byteBuf.markReaderIndex();
 
         int jsonSize = byteBuf.readInt();
-        if (jsonSize < byteBuf.readableBytes()) {
+        if (jsonSize > byteBuf.readableBytes()) {
             byteBuf.resetReaderIndex();
             return;
         }
 
         String json = byteBuf.toString(byteBuf.readerIndex(),jsonSize, StandardCharsets.UTF_8);
-
-        Message message = JSON.parseObject(json,Message.class);
+// {"metadata":{},"type":1} ?
+        Message message = BeanUtil.getGson().fromJson(json,Message.class);
 
         switch (message.getType()) {
             case METADATA_RESPONSE:
                 list.add(message.getMetadata());
                 break;
             case File_HEAD_INFO:
-                setFileSection(message.getSectionIndex());
+                resetFileSection(message.getSectionIndex());
                 this.state = State.FILE_TRANSFER;
                 break;
             default:
@@ -134,16 +144,14 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
     }
 
-    private void setFileSection(int fileSectionIndex) {
+    private void resetFileSection(int fileSectionIndex) {
         this.fileSectionIndex = fileSectionIndex;
-        currSection = fileSectionInfos.get(fileSectionIndex);
+        currSection = jobMetaData.getSectionInfos().get(fileSectionIndex);
         sectionLength = currSection.getLength();
 
         try {
-            raf = new RandomAccessFile(baseDir + currSection.getDirPath() + currSection.getFileName(),"rw");
+            raf = new RandomAccessFile(jobMetaData.getDownDir() + currSection.getDirPath() + currSection.getFileName(),"rw");
             raf.seek(currSection.getOffset());
-
-            recorder.setFile(fileSectionIndex);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -151,12 +159,8 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
     }
 
-    public void setBaseDir(String baseDir) {
-        this.baseDir = baseDir;
-    }
-
-    public void setFileSectionInfos(List<FileSectionInfo> fileSectionInfos) {
-        this.fileSectionInfos = fileSectionInfos;
+    public void setWaitingJobs(BlockingQueue<FileReceiveRecorder> waitingJobs) {
+        this.waitingJobs = waitingJobs;
     }
 
     /**

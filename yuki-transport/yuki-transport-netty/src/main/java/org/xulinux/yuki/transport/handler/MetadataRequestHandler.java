@@ -20,7 +20,6 @@ public class MetadataRequestHandler extends ChannelInboundHandlerAdapter {
     // todo
     private ConcurrentHashMap<String,ResourceMetadata> resourceCache;
 
-
     /**
      * 应对 metadataRequestHandler
      *
@@ -42,8 +41,6 @@ public class MetadataRequestHandler extends ChannelInboundHandlerAdapter {
 
         // 好的系统设计处处是缓存，比如说咱们这里就可以做一个，todo
         // 缓存就是在要生成东西的地方做个map先去get一下
-
-        // todo 重新设计resourceMetadata
         ResourceMetadata  resourceMetadata = new ResourceMetadata(path);
 
         Message response = new Message();

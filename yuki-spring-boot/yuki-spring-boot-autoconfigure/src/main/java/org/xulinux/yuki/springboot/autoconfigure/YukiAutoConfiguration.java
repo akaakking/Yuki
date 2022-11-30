@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.nodeServer.NodeServer;
-import org.xulinux.yuki.registry.NodeInfo;
+import org.xulinux.yuki.common.NodeInfo;
 
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -32,13 +32,11 @@ public class YukiAutoConfiguration {
     @ConditionalOnMissingBean(NodeServer.class)
     @ConditionalOnProperty(prefix = "yuki",value = "enabled", havingValue = "true",matchIfMissing = true)
     public NodeServer nodeServer() {
-        NodeServer nodeServer = new NodeServer();
-
-        // zk
+        //zk
         YukiProperties.Registry registry = yukiProperties.getRegistry();
         String registryIp = registry.getIp();
         int registryPort = registry.getPort();
-        nodeServer.setHostString(registryIp + ":" + registryPort);
+        String zkhost = registryIp + ":" + registryPort;
 
         // nodeinfo
         int nodePort = yukiProperties.getPort();
@@ -55,14 +53,12 @@ public class YukiAutoConfiguration {
         nodeInfo.setIp(ip);
         nodeInfo.setPort(nodePort);
         nodeInfo.setMaxServicing(maxServicing);
-        nodeServer.setNodeInfo(nodeInfo);
 
         // 持久化
         String aofPath = yukiProperties.getAofPath();
-        nodeServer.setAofPath(aofPath);
         ResourcePathRecorder.setAofDirPath(aofPath);
 
-        return nodeServer;
+        return new NodeServer(aofPath,nodeInfo,zkhost);
     }
 
     public void setYukiProperties(YukiProperties yukiProperties) {

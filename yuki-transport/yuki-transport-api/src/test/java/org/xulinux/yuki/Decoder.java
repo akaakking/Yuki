@@ -1,11 +1,9 @@
 package org.xulinux.yuki;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import org.junit.Test;
+import org.xulinux.yuki.common.BeanUtil;
 
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -36,7 +34,7 @@ public class Decoder extends ByteToMessageDecoder {
             // 这个方法其实很讲究可以看一下是怎么做的
             String json = byteBuf.toString(byteBuf.readerIndex(),size,StandardCharsets.UTF_8);
 
-            Message message = JSON.parseObject(json,Message.class);
+            Message message = BeanUtil.getGson().fromJson(json,Message.class);
             System.out.println("正在接受" + message.getFileName());
 
             fileSize = message.getFileSize();

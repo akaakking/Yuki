@@ -1,6 +1,8 @@
 package org.xulinux.yuki.registry;
 
 
+import org.xulinux.yuki.common.NodeInfo;
+
 import java.util.List;
 
 /**

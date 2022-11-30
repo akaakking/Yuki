@@ -39,7 +39,17 @@
         </dependency>
         <dependency>
             <groupId>org.xulinux</groupId>
+            <artifactId>yuki-registry</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xulinux</groupId>
             <artifactId>yuki-transport</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xulinux</groupId>
+            <artifactId>yuki-registry-zookeeper</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

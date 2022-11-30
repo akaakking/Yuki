@@ -1,13 +1,10 @@
 package org.xulinux.yuki.nodeServer;
 
-import io.netty.bootstrap.Bootstrap;
-import org.xulinux.yuki.common.Listenner;
-import org.xulinux.yuki.common.Speaker;
+import org.xulinux.yuki.common.*;
 import org.xulinux.yuki.common.fileUtil.FileUtil;
 import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
 import org.xulinux.yuki.common.spi.ExtensionLoader;
 import org.xulinux.yuki.registry.LoadBalance;
-import org.xulinux.yuki.registry.NodeInfo;
 import org.xulinux.yuki.registry.RegistryClient;
 import org.xulinux.yuki.transport.TransportClient;
 import org.xulinux.yuki.transport.TransportServer;
@@ -16,9 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ServiceLoader;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -34,7 +30,7 @@ public class NodeServer implements Speaker {
     /**
      * 资源id -> 资源path
      */
-    private static final ConcurrentHashMap<String, String> id2path = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, String> id2path = new ConcurrentHashMap<>();
 
     /**
      * 注册中心的客户端，用来资源发现
@@ -42,7 +38,7 @@ public class NodeServer implements Speaker {
     private RegistryClient registryClient;
     private List<Listenner> listenners;
 
-    private volatile boolean start;
+    private volatile boolean servicing;
 
     private TransportServer transportServer;
 
@@ -59,32 +55,18 @@ public class NodeServer implements Speaker {
      */
     private NodeInfo nodeInfo;
 
-    public NodeServer() {
+    public NodeServer(String aofPath,
+                      NodeInfo nodeInfo,
+                      String hostString) {
+        this.aofPath = aofPath;
+        this.nodeInfo = nodeInfo;
+        this.hostString = hostString;
         listenners = new ArrayList<>();
         transportClient = ExtensionLoader.getExtension(TransportClient.class);
+
+        initID2Path();
+        initRegistry();
     }
-
-    private void ininID2Path() {
-        File file = new File(aofPath + "/" + ResourcePathRecorder.id2pathFileName);
-
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return;
-        }
-
-        List<String> list = FileUtil.readList(aofPath);
-        // key%value
-        for (String s : list) {
-            String[] kv = s.split("%");
-
-            id2path.put(kv[0],kv[1]);
-        }
-    }
-
 
     public void checkDowntime() {
         File file = new File(this.aofPath);
@@ -100,62 +82,48 @@ public class NodeServer implements Speaker {
         return hasDowntime;
     }
 
-    public void resumeTransmission() {
-        this.transportClient.resumeTransmission();
-    }
     public void rmLogAndResource() {
         this.transportClient.rmLogAndResource();
     }
 
-    public void setHostString(String hostString) {
-        this.hostString = hostString;
-    }
 
-    private void ininTransportServer() {
+    private void initTransportServer() {
         transportServer = ExtensionLoader.getExtension(TransportServer.class);
 
         transportServer.setPort(nodeInfo.getPort());
-    }
-
-    public void setAofPath(String aofPath) {
-        this.aofPath = aofPath;
     }
 
     public AtomicInteger getTransCount() {
         return transportServer.transporting();
     }
 
-    public void setNodeInfo(NodeInfo nodeInfo) {
-        this.nodeInfo = nodeInfo;
-    }
-
-    public boolean isStart() {
-        return start;
+    public boolean isServicing() {
+        return servicing;
     }
 
     public void exportService() {
-        if (start) {
+        if (servicing) {
             this.speak("服务已开启，不可重复启动");
             return;
         }
 
-        this.speak("正在连接zk...");
-        // 初始化registryClient
-        registryClient.connect();
+        this.servicing = true;
 
-        this.speak("zk连接成功！");
+        initTransportServer();
 
+        registResources();
 
         // 开启netty接收请求
         this.speak("正在开启服务....");
-        transportServer.start();
+        transportServer.start(id2path);
         this.speak("服务已开启");
-        this.start = true;
+        this.servicing = true;
     }
 
-    public void ininServer() {
-        ininID2Path();
-        ininTransportServer();
+    private void registResources() {
+        for (Map.Entry<String, String> idAndPath : id2path.entrySet()) {
+            registerResourth(idAndPath.getKey(),idAndPath.getValue());
+        }
     }
 
     public void terminal() {
@@ -172,20 +140,37 @@ public class NodeServer implements Speaker {
         this.speak("传输服务关闭成功");
     }
 
-    public void registerResourth(String resourthID) {
+    public void registerResourth(String resourthID, String path) {
+        if (!isServicing()) {
+            this.speak("服务未开启，请先开启服务后再注册");
+        }
+
         this.speak("正在注册服务[" + resourthID +
                 "] 。。。");
         registryClient.registerResources(resourthID,nodeInfo);
         this.speak("服务[" + resourthID +
                 "]注册成功！");
+        id2path.put(resourthID,path);
+        persist(resourthID,path);
     }
 
+    private void persist(String resourceId, String path) {
+        File id2pathlog = new File(ResourcePathRecorder.getAofDirPath() + ResourcePathRecorder.id2pathFileName);
+
+        FileUtil.writeLine(id2pathlog,resourceId + "%" + path);
+    }
+
+    /**
+     * 除了 unregist还应该有一个，取消这个资源服务的接口。
+     * @param resourthID
+     */
     public void unregisterResourth(String resourthID) {
         this.speak("正在反注册服务[" + resourthID +
                 "]。。。");
         registryClient.unRegisterResources(resourthID,nodeInfo);
         this.speak("反注册服务[" + resourthID +
                 "]成功！");
+        // todo 1. hashmap delete 2. log delete
     }
 
     /**
@@ -215,22 +200,58 @@ public class NodeServer implements Speaker {
 
         resourceHolders = balance.select(resourceHolders,maxReceive);
 
-        sb.append("挑选出来了" + resourceHolders.size() + "个资源拥有者\n");
+        sb.append("      挑选出来了" + resourceHolders.size() + "个资源拥有者\n");
 
         for (NodeInfo resourceHolder : resourceHolders) {
-            sb.append(resourceHolder)
+            sb.append("      " + resourceHolder)
                     .append("\n");
         }
-        this.speak(sb.toString());
+
+        this.speak(sb.delete(sb.length()-1,sb.length()).toString());
 
         this.speak("正在向资源拥有者们请求....");
-        transportClient.download(resourceId,resourceHolders,downDir);
+
+        JobMetaData jobMetaData = new JobMetaData(resourceId,downDir);
+
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setSpeaker(this);
+
+        transportClient.download(resourceHolders, jobMetaData,progressBar);
+
         this.speak("文件下载成功！");
 
         this.speak("正在注册服务...");
         // down
-        registerResourth(resourceId);
+        registerResourth(resourceId,jobMetaData.getDownDir());
         this.speak("注册服务成功...");
+    }
+
+    public void resumeTransmission() {
+        this.speak("正在开启断点续传");
+        String aofpath = ResourcePathRecorder.getAofDirPath();
+
+        File file = new File(aofpath);
+
+        File[] files = file.listFiles(f -> !f.getName().startsWith(ResourcePathRecorder.id2pathFileName));
+
+        String resourceId = files[0].getName().substring(0,files[0].getName().lastIndexOf("-"));
+
+        this.speak("正在向注册中心请求。。。");
+        List<NodeInfo> resouceHolders = registryClient.getResouceHolders(resourceId);
+        if (resouceHolders == null ||resouceHolders.size() == 0) {
+            this.speak("目前集群中已不存在资源" + resourceId);
+            rmLogAndResource();
+            return;
+        }
+
+        this.speak("共有" + resouceHolders.size() +  "个节点拥有此资源");
+
+        LoadBalance balance = ExtensionLoader.getExtension(LoadBalance.class);
+
+        // 只会少不会多
+        balance.select(resouceHolders, files.length);
+
+        this.transportClient.resumeTransmission(resouceHolders, files);
     }
 
     @Override
@@ -248,5 +269,34 @@ public class NodeServer implements Speaker {
     @Override
     public void removeListenner(Listenner listenner) {
         listenners.remove(listenner);
+    }
+
+    private void initRegistry() {
+        String[] hosts = hostString.split(":");
+
+        registryClient = ExtensionLoader.getExtension(RegistryClient.class);
+
+        registryClient.connect(hosts[0],Integer.valueOf(hosts[1]));
+    }
+
+    private void initID2Path() {
+        File file = new File(aofPath + "/" + ResourcePathRecorder.id2pathFileName);
+
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        List<String> list = FileUtil.readList(file);
+        // key%value
+        for (String s : list) {
+            String[] kv = s.split("%");
+
+            id2path.put(kv[0],kv[1]);
+        }
     }
 }

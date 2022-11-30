@@ -10,9 +10,11 @@ import org.xulinux.yuki.nodeServer.NodeServer;
  */
 public class CommandExecutor  {
 
-    public static final String DOWNLOAD = "downlowd";
+    public static final String DOWNLOAD = "download";
     public static final String SERVICE = "service";
     public static final String SHOW = "show";
+
+    public static final String REGIST = "regist";
 
     /**
      * 关闭客户端连接
@@ -25,6 +27,8 @@ public class CommandExecutor  {
     public static void execute(String message) {
         if (message.startsWith(DOWNLOAD)) {
             download(message);
+        } else if (message.startsWith(REGIST)) {
+            regist(message);
         } else if (message.startsWith(SERVICE)) {
             service(message);
         } else if (message.startsWith(SHOW)) {
@@ -40,6 +44,12 @@ public class CommandExecutor  {
         } else {
            withoutCommand(message);
         }
+    }
+
+    // regist resourceId path
+    private static void regist(String message) {
+        String[] resourceIDAndPath = message.substring("regist ".length()).trim().split(" ");
+        nodeServer.registerResourth(resourceIDAndPath[0],resourceIDAndPath[1]);
     }
 
     public static void dealDowntime(String message) {
@@ -110,7 +120,7 @@ public class CommandExecutor  {
     }
 
     private static void serviceStatus() {
-        if (!nodeServer.isStart()) {
+        if (!nodeServer.isServicing()) {
             nodeServer.speak("Service is not turned on");
             return;
         }

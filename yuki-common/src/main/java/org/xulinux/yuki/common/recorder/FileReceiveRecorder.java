@@ -1,12 +1,12 @@
 package org.xulinux.yuki.common.recorder;
 
-import com.alibaba.fastjson.JSON;
+import org.xulinux.yuki.common.BeanUtil;
+import org.xulinux.yuki.common.JobMetaData;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.common.fileUtil.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -19,35 +19,33 @@ import java.util.concurrent.atomic.AtomicLong;
 public class FileReceiveRecorder {
     private AtomicLong totalSize;
 
-    private int numOfNode;
-
     private int count;
-
-    private String downDir;
-
     private File aofFile;
-
-    private List<FileSectionInfo> sectionInfos;
-
-    private FileSectionInfo fileSectionInfo;
+    private FileSectionInfo curSection;
+    private int currentSectionIndex;
+    private JobMetaData jobMetaData;
 
     /**
      * 负责从文件中恢复
      * @param path
      */
     public FileReceiveRecorder(String path) {
+        this.totalSize = new AtomicLong();
         this.aofFile = new File(path);
+        
         List<String> logs = FileUtil.readList(path);
-        this.downDir = logs.get(0);
-        List<FileSectionInfo> sectionInfos = (List<FileSectionInfo>) JSON.parse(logs.get(1));
 
-        rollBack(sectionInfos,logs);
+        this.jobMetaData = BeanUtil.getGson().fromJson(logs.get(0),JobMetaData.class);
+
+        rollBack(jobMetaData.getSectionInfos(),logs);
     }
+
+
 
     private void rollBack(List<FileSectionInfo> sectionInfos, List<String> logs) {
         long transfered = 0;
 
-        for (int i = 2; i < logs.size(); i++) {
+        for (int i = 1; i < logs.size(); i++) {
             transfered += Integer.valueOf(logs.get(i));
         }
 
@@ -63,22 +61,22 @@ public class FileReceiveRecorder {
             }
         }
 
-        this.sectionInfos = sectionInfos;
         clear();
         calculateTotalSize(sectionInfos);
     }
 
-    public FileReceiveRecorder(List<FileSectionInfo> sectionInfos,String resourceId, int numOfNode,String downDir) {
-        this.downDir = downDir;
-        this.numOfNode = numOfNode;
-        this.sectionInfos = new ArrayList<>();
+    public FileReceiveRecorder(JobMetaData jobMetaData) {
+        this.jobMetaData = jobMetaData;
         this.totalSize = new AtomicLong();
+        this.currentSectionIndex = 0;
+        this.curSection = jobMetaData.getSectionInfos().get(currentSectionIndex);
 
-        calculateTotalSize(sectionInfos);
+        calculateTotalSize(jobMetaData.getSectionInfos());
 
-        String path = ResourcePathRecorder.getAofDirPath()  + "/" + resourceId  + "-" + numOfNode;
+        String path = ResourcePathRecorder.getAofDirPath() + "/" + jobMetaData.getResourceId() + "-" + jobMetaData.getHostString();
 
         this.aofFile = new File(path);
+
         if (!aofFile.exists()) {
             try {
                 aofFile.createNewFile();
@@ -86,11 +84,12 @@ public class FileReceiveRecorder {
                 throw new RuntimeException(e);
             }
         }
-        persistence(sectionInfos);
+
+        persistence(jobMetaData);
     }
 
-    public void setFile(int currentFileIndex) {
-        fileSectionInfo = sectionInfos.get(currentFileIndex);
+    public JobMetaData getJobMetaData() {
+        return jobMetaData;
     }
 
     private void calculateTotalSize(List<FileSectionInfo> sectionInfos) {
@@ -102,8 +101,8 @@ public class FileReceiveRecorder {
     // 写满4m将当前状态做一个snapshot
     // 就要看允许丢失多少了
     public void record(int received) {
-        this.fileSectionInfo.receive(received);
-        this.totalSize.addAndGet(received * -1);
+        int remainingLength = this.curSection.receiveAndGet(received);
+        long remainSize = this.totalSize.addAndGet(received * -1);
 
         count += received;
 
@@ -111,6 +110,15 @@ public class FileReceiveRecorder {
         if (count > (2 << 22))  {
             persistence(count);
             count = 0;
+        }
+
+        if (remainingLength == 0) {
+            this.curSection = this.jobMetaData.getSectionInfos().get(++currentSectionIndex);
+        }
+
+        if (remainSize == 0) {
+            // 传输完成，删除aof
+            this.aofFile.delete();
         }
     }
 
@@ -129,9 +137,8 @@ public class FileReceiveRecorder {
     }
 
     // 持久化整个列表
-    private void persistence(List<FileSectionInfo> sectionInfos) {
-        FileUtil.writeLine(aofFile,downDir);
-        String str = JSON.toJSONString(sectionInfos);
+    private void persistence(JobMetaData jobMetaData) {
+        String str = BeanUtil.getGson().toJson(jobMetaData);
         FileUtil.writeLine(aofFile,str);
     }
 
@@ -139,18 +146,18 @@ public class FileReceiveRecorder {
         return totalSize;
     }
 
-    public int getNumOfNode() {
-        return numOfNode;
-    }
 
+    // todo test
     public void clear() {
         int  i = 0;
-        for (; i < sectionInfos.size(); i++) {
-            if (sectionInfos.get(i).getLength() != 0) {
+        for (; i < this.jobMetaData.getSectionInfos().size(); i++) {
+            if (this.jobMetaData.getSectionInfos().get(i).getLength() != 0) {
                 break;
             }
         }
 
-        sectionInfos.subList(0,i).clear();
+        this.jobMetaData.getSectionInfos().subList(0,i).clear();
+        this.currentSectionIndex = 0;
+        this.curSection = this.jobMetaData.getSectionInfos().get(currentSectionIndex);
     }
 }

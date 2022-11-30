@@ -2,7 +2,6 @@ package org.xulinux.yuki.common.fileUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -11,7 +10,7 @@ import java.util.List;
  * @Author wfh
  * @Date 2022/10/12 上午11:38
  */
-public class ResourceMetadata {
+public class ResourceMetadata  {
     // 8 M
     public static int DEFAULT_MAX_SECTION_SIZE = 1 << 23;
 
@@ -24,13 +23,12 @@ public class ResourceMetadata {
     // 那么这个resourthpath实际上指的是？
     private transient String resourceParentPath;
 
-    public ResourceMetadata() {
-    }
-
     // 只可传输目录不可传输文件
     public ResourceMetadata(String resourcepath) {
         // /home/wfh/dubbo
         // /home/wfh
+        this.dirs = new ArrayList<>();
+        this.files = new ArrayList<>();
         this.resourceParentPath = resourcepath.substring(0, resourcepath.lastIndexOf("/"));
         File file = new File(resourcepath);
 
@@ -57,7 +55,7 @@ public class ResourceMetadata {
         }
     }
 
-    public void creatDir() {
+    private void creatDir() {
         for (String dir : dirs) {
             File file = new File(this.resourceParentPath + dir);
             if (!file.exists()) {
@@ -80,9 +78,11 @@ public class ResourceMetadata {
             sections.add(new ArrayList<>());
         }
 
+        int index = 0;
+
         for (FileInfo file : files) {
             long unallocated = file.getSize();
-            int index = 0;
+
             long offset = 0;
 
             while (unallocated != 0) {

@@ -1,19 +1,13 @@
 package org.xulinux.yuki;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.junit.Test;
+import org.xulinux.yuki.common.BeanUtil;
 
-import java.awt.dnd.DropTarget;
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.Channel;
-import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.PriorityQueue;
 
 /**
  * //TODO add class commment here
@@ -25,7 +19,7 @@ public class Encoder extends MessageToByteEncoder<Message> {
     @Override
     protected void encode(ChannelHandlerContext channelHandlerContext, Message message, ByteBuf byteBuf) throws Exception {
         // 有一个很奇怪的点就是按理来说这个东西不应该可以扩容要不然地址会变啊？
-        String jsobj = JSON.toJSONString(message);
+        String jsobj = BeanUtil.getGson().toJson(message);
         byte[] bytes = jsobj.getBytes(StandardCharsets.UTF_8);
         byteBuf.writeInt(bytes.length);
         byteBuf.writeBytes(bytes);
@@ -39,4 +33,3 @@ public class Encoder extends MessageToByteEncoder<Message> {
         System.out.println(file.getParent());
     }
 }
-
