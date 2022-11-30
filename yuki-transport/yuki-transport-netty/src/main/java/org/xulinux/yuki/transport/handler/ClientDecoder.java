@@ -74,7 +74,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
         message.setType(Message.Type.FILE_SECTION_ASSIGN);
         message.setResourceId(jobMetaData.getResourceId());
         message.setSectionInfos(jobMetaData.getSectionInfos());
-
+        // 这个不是在io线程做的发送所以会包装成tast
         ctx.writeAndFlush(message);
         reset();
     }
@@ -83,7 +83,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
        this.fileSectionIndex = 0;
        this.state = State.HEAD_PARSE;
     }
-
 
     private void writeToDisk(ByteBuf byteBuf) throws IOException, InterruptedException {
         int readsize = byteBuf.readableBytes() > sectionLength ? byteBuf.readableBytes() : sectionLength;
@@ -128,6 +127,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
         }
 
         String json = byteBuf.toString(byteBuf.readerIndex(),jsonSize, StandardCharsets.UTF_8);
+        byteBuf.skipBytes(jsonSize);
 // {"metadata":{},"type":1} ?
         Message message = BeanUtil.getGson().fromJson(json,Message.class);
 

@@ -1,6 +1,9 @@
 import org.junit.Test;
 import org.xulinux.yuki.common.ProgressBar;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -15,32 +18,55 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ProgressBarTest {
 
     public static void main(String[] args) {
-        ProgressBar progressBar = new ProgressBar();
+        List<String> ls = new CopyOnWriteArrayList<>();
 
+        ls.add("a");
+        ls.add("b");
+        ls.add("c");
+//
+//        for (int i = 0; i < ls.size(); i++) {
+//            System.out.println(ls.get(i));
+//            ls.add(1,"f" + i);
+//        }
+        int i = 0;
 
-        Executor executor = Executors.newCachedThreadPool();
+        for (String l : ls) {
+            System.out.println(l);
+            ls.add("f" + i++);
+        }
 
-        Runnable run = new Runnable() {
-            @Override
-            public void run() {
-                AtomicLong num = new AtomicLong(40);
-                progressBar.add(num);
-                for (;;) {
-                    num.decrementAndGet();
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        };
+        System.out.println(ls.size());
 
-        executor.execute(run);
-        executor.execute(run);
-
-        progressBar.show();
     }
+
+
+//    public static void main(String[] args) {
+//        ProgressBar progressBar = new ProgressBar();
+//
+//
+//        Executor executor = Executors.newCachedThreadPool();
+//
+//        Runnable run = new Runnable() {
+//            @Override
+//            public void run() {
+//                AtomicLong num = new AtomicLong(40);
+//                progressBar.add(num);
+//                for (;;) {
+//                    num.decrementAndGet();
+//                    try {
+//                        Thread.sleep(300);
+//                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//            }
+//        };
+//
+//        executor.execute(run);
+//        executor.execute(run);
+//
+//        progressBar.show();
+//    }
 
 
 

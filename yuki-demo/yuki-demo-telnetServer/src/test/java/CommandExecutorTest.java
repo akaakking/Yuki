@@ -1,7 +1,11 @@
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufAllocator;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * //TODO add class commment here
@@ -10,15 +14,15 @@ import java.util.List;
  * @Date 2022/11/26 下午5:20
  */
 public class CommandExecutorTest {
+    @Test
+    public void COW() {
+        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
 
-    public List<List<Integer>> permute(int[] nums) {
-        List<List<Integer>> result = new ArrayList<>();
-
-        for (int i = 0; i < nums.length; i++)  {
-
-        }
-
-        return result;
+        buf.writeBytes("abcde".getBytes(StandardCharsets.UTF_8));
+        String str = buf.toString(0,2,StandardCharsets.UTF_8);
+        buf.skipBytes(str.length());
+        System.out.println(str);
+        System.out.println(buf.readableBytes());
     }
 
     @Test

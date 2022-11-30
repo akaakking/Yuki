@@ -14,9 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class ProgressBar {
     private List<Long> origin;
     private List<AtomicLong> cur;
-
     private Speaker speaker;
-
 
     public ProgressBar() {
         this.origin = new CopyOnWriteArrayList<>();
@@ -50,14 +48,15 @@ public class ProgressBar {
             }
             speaker.speak(sb.toString());
 
+            // todo 这里会有bug
+            if (!hasUnfinished && origin.size() != 0)  {
+                break;
+            }
+
             try {
                 Thread.sleep(500);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
-            }
-
-            if (!hasUnfinished && origin.size() != 0)  {
-                break;
             }
         }
     }
