@@ -112,7 +112,7 @@ public class FileReceiveRecorder {
             count = 0;
         }
 
-        if (remainingLength == 0) {
+        if (remainingLength == 0 && this.jobMetaData.getSectionInfos().size() > currentSectionIndex + 1) {
             this.curSection = this.jobMetaData.getSectionInfos().get(++currentSectionIndex);
         }
 

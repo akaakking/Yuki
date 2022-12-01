@@ -3,6 +3,7 @@ package org.xulinux.yuki.transport.handler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.stream.ChunkedFile;
 import org.xulinux.yuki.common.fileUtil.FileSectionInfo;
 import org.xulinux.yuki.transport.Message;
@@ -18,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Author wfh
  * @Date 2022/10/27 下午1:38
  */
-public class FileTransferHandler extends ChannelInboundHandlerAdapter {
+public class FileTransferHandler extends SimpleChannelInboundHandler<Message> {
     private ConcurrentHashMap<String,String> id2path;
     private int chunksize = 1 << (10 + 3);
     private AtomicInteger transCount;
@@ -32,10 +33,8 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Message message = (Message) msg;
-
-        List<FileSectionInfo> fileSectionInfos = message.getSectionInfos();
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+        List<FileSectionInfo> fileSectionInfos = msg.getSectionInfos();
 
         if (fileSectionInfos == null) {
             return;
@@ -43,7 +42,8 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
 
         transCount.getAndIncrement();
 
-        String resourthPath = id2path.get(message.getResourceId());
+        String resourthPath = id2path.get(msg.getResourceId());
+        String rootPath = resourthPath.substring(0,resourthPath.lastIndexOf("/"));
 
         boolean isLinux = false;
 
@@ -62,7 +62,7 @@ public class FileTransferHandler extends ChannelInboundHandlerAdapter {
 
             ctx.write(responseHead);
 
-            String sectionPath = resourthPath + "/" + fileSectionInfo.getDirPath() + "/" + fileSectionInfo.getFileName();
+            String sectionPath = rootPath + "/" + fileSectionInfo.getDirPath() + "/" + fileSectionInfo.getFileName();
 
             RandomAccessFile raf = new RandomAccessFile(sectionPath,"r");
 

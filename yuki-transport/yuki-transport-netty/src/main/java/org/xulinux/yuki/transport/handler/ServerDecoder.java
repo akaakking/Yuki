@@ -33,6 +33,7 @@ public class ServerDecoder extends ByteToMessageDecoder {
         }
 
         String json = byteBuf.toString(byteBuf.readerIndex(),jsonSize, StandardCharsets.UTF_8);
+        byteBuf.skipBytes(jsonSize);
 
         Message message = BeanUtil.getGson().fromJson(json,Message.class);
 

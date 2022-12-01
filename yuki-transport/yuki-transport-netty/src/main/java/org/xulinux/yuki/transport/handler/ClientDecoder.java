@@ -75,7 +75,13 @@ public class ClientDecoder extends ByteToMessageDecoder {
         message.setResourceId(jobMetaData.getResourceId());
         message.setSectionInfos(jobMetaData.getSectionInfos());
         // 这个不是在io线程做的发送所以会包装成tast
-        ctx.writeAndFlush(message);
+        // 这边为什么发不过去
+        try {
+            ctx.channel().writeAndFlush(message).sync();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         reset();
     }
 
@@ -85,12 +91,11 @@ public class ClientDecoder extends ByteToMessageDecoder {
     }
 
     private void writeToDisk(ByteBuf byteBuf) throws IOException, InterruptedException {
-        int readsize = byteBuf.readableBytes() > sectionLength ? byteBuf.readableBytes() : sectionLength;
+        int readsize = byteBuf.readableBytes() < sectionLength ? byteBuf.readableBytes() : sectionLength;
 
         ByteBuffer buffer = byteBuf.internalNioBuffer(byteBuf.readerIndex(),readsize);
-        byteBuf.skipBytes(readsize);
-
         raf.getChannel().write(buffer);
+        byteBuf.skipBytes(readsize);
 
         recorder.record(readsize);
 
@@ -150,7 +155,7 @@ public class ClientDecoder extends ByteToMessageDecoder {
         sectionLength = currSection.getLength();
 
         try {
-            raf = new RandomAccessFile(jobMetaData.getDownDir() + currSection.getDirPath() + currSection.getFileName(),"rw");
+            raf = new RandomAccessFile(jobMetaData.getDownDir() + "/" + currSection.getDirPath() + "/" + currSection.getFileName(),"rw");
             raf.seek(currSection.getOffset());
         } catch (FileNotFoundException e) {
             e.printStackTrace();

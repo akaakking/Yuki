@@ -2,6 +2,7 @@ package org.xulinux.yuki.transport.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.xulinux.yuki.common.fileUtil.ResourceMetadata;
 import org.xulinux.yuki.transport.Message;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Author wfh
  * @Date 2022/10/26 上午10:28
  */
-public class MetadataRequestHandler extends ChannelInboundHandlerAdapter {
+public class MetadataRequestHandler extends SimpleChannelInboundHandler<Message> {
     private ConcurrentHashMap<String,String> id2path;
 
     // todo
@@ -28,14 +29,13 @@ public class MetadataRequestHandler extends ChannelInboundHandlerAdapter {
      * @throws Exception
      */
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        Message message = (Message) msg;
-
-        if (message.getSectionInfos() != null) {
+    protected void channelRead0(ChannelHandlerContext ctx, Message msg) throws Exception {
+        if (msg.getSectionInfos() != null) {
+            ctx.fireChannelRead(msg);
             return;
         }
 
-        String resourceId = message.getResourceId();
+        String resourceId = msg.getResourceId();
 
         String path = id2path.get(resourceId);
 

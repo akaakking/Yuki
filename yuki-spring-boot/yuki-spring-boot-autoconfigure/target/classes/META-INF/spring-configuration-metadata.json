@@ -37,16 +37,6 @@
       "name": "yuki.registry.port",
       "type": "java.lang.Integer",
       "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
-    },
-    {
-      "name": "yuki.zk.ip",
-      "type": "java.lang.String",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
-    },
-    {
-      "name": "yuki.zk.port",
-      "type": "java.lang.Integer",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
     }
   ],
   "hints": []

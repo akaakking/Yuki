@@ -1,0 +1,12 @@
+# service port
+yuki:
+  port: 9410
+  max-servicing: 3
+  registry:
+    port: 2181
+    ip: 127.0.0.1
+  aof-path: /home/wfh/aof1
+
+# /home/wfh/Downloads/feifei
+# /home/wfh/downDir
+# download makabaka to /home/wfh/downDir
