@@ -2,10 +2,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import org.junit.Test;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 /**
  * //TODO add class commment here
@@ -14,15 +17,43 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @Date 2022/11/26 下午5:20
  */
 public class CommandExecutorTest {
-    @Test
-    public void COW() {
-        ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
+    public static void main(String[] ars) {
+//        // 线程不安全？
+//        RandomAccessFile randomAccessFile = new RandomAccessFile("/home/wfh/ty/11.22日.md","rw");
+//        randomAccessFile.write("fdsfds".getBytes(StandardCharsets.UTF_8));
 
-        buf.writeBytes("abcde".getBytes(StandardCharsets.UTF_8));
-        String str = buf.toString(0,2,StandardCharsets.UTF_8);
-        buf.skipBytes(str.length());
-        System.out.println(str);
-        System.out.println(buf.readableBytes());
+        Executor executor = Executors.newCachedThreadPool();
+
+        BlockingQueue<Integer> blockingQueue = new LinkedBlockingQueue<>();
+
+        blockingQueue.add(0);
+        blockingQueue.add(5);
+
+        Runnable runnable = () -> {
+            RandomAccessFile raf = null;
+            try {
+                raf = new RandomAccessFile("/home/wfh/ty/11.22日.md", "rw");
+
+                raf.seek(blockingQueue.poll());
+                for (int i = 0; i < 5; i++) {
+                    Thread.sleep(500);
+                    raf.write((byte) i);
+                }
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    raf.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+
+        executor.execute(runnable);
+        executor.execute(runnable);
     }
 
     @Test

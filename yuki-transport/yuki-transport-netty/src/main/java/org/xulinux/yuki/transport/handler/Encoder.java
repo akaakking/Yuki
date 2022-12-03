@@ -1,6 +1,7 @@
 package org.xulinux.yuki.transport.handler;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.xulinux.yuki.common.BeanUtil;
@@ -14,6 +15,7 @@ import java.nio.charset.StandardCharsets;
  * @Author wfh
  * @Date 2022/10/20 下午1:34
  */
+@ChannelHandler.Sharable
 public class Encoder extends MessageToByteEncoder<Message> {
 
     @Override

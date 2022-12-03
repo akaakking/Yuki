@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,7 +45,6 @@ public class NodeServer implements Speaker {
 
     private String hostString;
 
-    // set
     private String aofPath;
 
     /**
@@ -86,7 +84,6 @@ public class NodeServer implements Speaker {
         this.transportClient.rmLogAndResource();
     }
 
-
     private void initTransportServer() {
         transportServer = ExtensionLoader.getExtension(TransportServer.class);
 
@@ -111,7 +108,10 @@ public class NodeServer implements Speaker {
 
         initTransportServer();
 
-        registResources();
+        for (String resourceID : id2path.keySet()) {
+            this.speak("向注册中心注册：" + resourceID);
+            registToRegistry(resourceID);
+        }
 
         // 开启netty接收请求
         this.speak("正在开启服务....");
@@ -120,10 +120,13 @@ public class NodeServer implements Speaker {
         this.servicing = true;
     }
 
-    private void registResources() {
-        for (Map.Entry<String, String> idAndPath : id2path.entrySet()) {
-            registerResourth(idAndPath.getKey(),idAndPath.getValue());
-        }
+    public void registLocal(String resourceId, String path) {
+        id2path.put(resourceId,path);
+        persist(resourceId,path);
+    }
+
+    public void registToRegistry(String resourthID) {
+        registryClient.registerResources(resourthID,nodeInfo);
     }
 
     public void terminal() {
@@ -143,20 +146,22 @@ public class NodeServer implements Speaker {
     public void registerResourth(String resourthID, String path) {
         if (!isServicing()) {
             this.speak("服务未开启，请先开启服务后再注册");
+            return;
         }
 
         this.speak("正在注册服务[" + resourthID +
                 "] 。。。");
-        registryClient.registerResources(resourthID,nodeInfo);
+
+        registToRegistry(resourthID);
+
         this.speak("服务[" + resourthID +
                 "]注册成功！");
-        id2path.put(resourthID,path);
-        persist(resourthID,path);
+
+        registLocal(resourthID,path);
     }
 
     private void persist(String resourceId, String path) {
         File id2pathlog = new File(ResourcePathRecorder.getAofDirPath() + ResourcePathRecorder.id2pathFileName);
-
         FileUtil.writeLine(id2pathlog,resourceId + "%" + path);
     }
 
@@ -222,7 +227,12 @@ public class NodeServer implements Speaker {
 
         this.speak("正在注册服务...");
         // down
-        registerResourth(resourceId,jobMetaData.getDownDir());
+        registLocal(resourceId,jobMetaData.getDownDir() + "/" + jobMetaData.getResourceDirName());
+
+        if (servicing) {
+            registToRegistry(resourceId);
+        }
+
         this.speak("注册服务成功...");
     }
 

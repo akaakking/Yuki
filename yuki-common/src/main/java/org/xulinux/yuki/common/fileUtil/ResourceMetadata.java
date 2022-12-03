@@ -35,6 +35,10 @@ public class ResourceMetadata  {
         visit(file);
     }
 
+    public String getResourceDirName() {
+        return this.dirs.get(0);
+    }
+
     private void visit(File file) {
         if (file.isFile()) {
             // 是一个file
@@ -57,7 +61,7 @@ public class ResourceMetadata  {
 
     private void creatDir() {
         for (String dir : dirs) {
-            File file = new File(this.resourceParentPath + dir);
+            File file = new File(this.resourceParentPath + "/" + dir);
             if (!file.exists()) {
                 file.mkdirs();
             }

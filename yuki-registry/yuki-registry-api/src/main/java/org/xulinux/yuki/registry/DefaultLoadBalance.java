@@ -18,16 +18,20 @@ public class DefaultLoadBalance implements LoadBalance{
         return nodes
                 .stream()
                 .filter( nodeInfo -> nodeInfo.getNowServicing() < nodeInfo.getMaxServicing())
-                .sorted((n1,n2) -> {
-                        float num =  (float) n1.getMaxServicing() / n1.getNowServicing() -  n2.getMaxServicing() / n2.getNowServicing();
-                        if (num == 0) {
-                            return 0;
-                        } else if (num > 0) {
-                            return -1;
-                        } else {
-                            return 1;
-                        }
-                        })
+                .sorted((n1, n2) -> {
+                    float factor1 = ((float) n1.getNowServicing()) / n1.getMaxServicing();
+                    float factor2 = ((float) n2.getNowServicing()) / n2.getMaxServicing();
+
+                    float result = factor1 - factor2;
+
+                    if (result > 0) {
+                        return 1;
+                    } else if (result < 0) {
+                        return -1;
+                    }
+
+                    return 0;
+                })
                 .limit(maxReceive)
                 .collect(Collectors.toList());
     }

@@ -16,8 +16,18 @@ public class JobMetaData {
     private List<FileSectionInfo> sectionInfos;
     private String hostString;
 
+    private String resourceDirName;
+
 
     public JobMetaData() {
+    }
+
+    public void setResourceDirName(String resourceDirName) {
+        this.resourceDirName = resourceDirName;
+    }
+
+    public String getResourceDirName() {
+        return resourceDirName;
     }
 
     // 得到一个新的

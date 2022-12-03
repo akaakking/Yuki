@@ -37,6 +37,7 @@ public class MetadataRequestHandler extends SimpleChannelInboundHandler<Message>
 
         String resourceId = msg.getResourceId();
 
+        //
         String path = id2path.get(resourceId);
 
         // 好的系统设计处处是缓存，比如说咱们这里就可以做一个，todo
