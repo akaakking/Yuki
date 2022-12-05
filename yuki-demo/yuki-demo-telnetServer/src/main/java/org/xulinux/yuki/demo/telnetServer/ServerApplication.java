@@ -1,9 +1,15 @@
 package org.xulinux.yuki.demo.telnetServer;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.PropertySource;
 import org.xulinux.yuki.nodeServer.NodeServer;
+
+import java.util.logging.Logger;
 
 /**
  * 因为是文件传输嘛，所以还得搭一个产品
@@ -22,12 +28,17 @@ import org.xulinux.yuki.nodeServer.NodeServer;
  */
 @SpringBootApplication
 public class ServerApplication {
+
+    private static Log logger = LogFactory.getLog(SpringApplication.class);
+
     public static void main(String[] args) {
         ApplicationContext context = SpringApplication.run(ServerApplication.class, args);
         NodeServer nodeServer = context.getBean(NodeServer.class);
+        int telnetPort = Integer.parseInt(context.getEnvironment().getProperty("telnet.port"));
+        logger.info("TELNET PORT LISTEN ON " + telnetPort);
 
         TelnetNettyServer telnetNettyServer = new TelnetNettyServer(nodeServer);
-        telnetNettyServer.start(54177);
+        telnetNettyServer.start(telnetPort);
     }
 }
 

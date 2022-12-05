@@ -62,13 +62,17 @@ public class CommandExecutor  {
 
     // todo shutdown gracefully
     private static void shut(String message) {
+        boolean shut;
         if (message.length() > "shutdown".length()) {
-            nodeServer.shutdown(true);
+            shut = nodeServer.shutdown(true);
+            telnetNettyServer.shutdown();
         } else {
-            nodeServer.shutdown(false);
+            shut = nodeServer.shutdown(false);
         }
 
-        telnetNettyServer.shutdown();
+        if (shut) {
+            telnetNettyServer.shutdown();
+        }
     }
 
     // search *

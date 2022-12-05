@@ -1,11 +1,11 @@
 yuki:
-  aof-path: /home/wfh/YukiTest/aof2
-  port: 9104
+  aof-path: /home/wfh/YukiTest/aof
+  port: 9111
   registry:
     port: 2181
     ip: 127.0.0.1
   max-servicing: 3
 telnet:
-  port: 11112
+  port: 11111
 
 # download maka to /home/wfh/YukiTest/downDir1

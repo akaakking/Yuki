@@ -185,15 +185,17 @@ public class NodeServer implements Speaker {
         // todo 1. hashmap delete 2. log delete
     }
 
-    public void shutdown(boolean force) {
+    public boolean shutdown(boolean force) {
         if (servicing && !force) {
             speak("有任务正在运行，如果要强制退出，请用 -force");
-            return;
+            return false;
         }
 
         this.speak("bye~");
 
         terminal();
+
+        return true;
     }
 
     /**
@@ -279,7 +281,10 @@ public class NodeServer implements Speaker {
         // 只会少不会多
         balance.select(resouceHolders, files.length);
 
-        String path = this.transportClient.resumeTransmission(resouceHolders, files);
+        ProgressBar progressBar = new ProgressBar();
+        progressBar.setSpeaker(this);
+
+        String path = this.transportClient.resumeTransmission(resouceHolders, files, progressBar);
         this.speak("下载完毕！");
 
         this.speak("正在注册服务...");
@@ -334,6 +339,10 @@ public class NodeServer implements Speaker {
         List<String> list = FileUtil.readList(file);
         // key%value
         for (String s : list) {
+            if (s.isBlank()) {
+                continue;
+            }
+
             String[] kv = s.split("%");
 
             id2path.put(kv[0],kv[1]);

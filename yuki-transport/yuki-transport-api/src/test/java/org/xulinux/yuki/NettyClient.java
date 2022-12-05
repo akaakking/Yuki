@@ -16,6 +16,7 @@ import org.xulinux.yuki.transport.TransportClient;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
+import java.util.concurrent.CountDownLatch;
 
 
 /**
@@ -36,20 +37,25 @@ public class NettyClient {
                 .handler(new ChannelInitializer<NioSocketChannel>() {
                     @Override
                     protected void initChannel(NioSocketChannel ch) throws Exception {
-                        System.out.println("initChannel");
-                        ch.pipeline().addLast(new Loop());
+                        ch.pipeline().addLast(new Loop()).addLast(new ChannelInboundHandlerAdapter() {
+                            @Override
+                            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                                System.out.println("exceptionCaught 连接断开...");
+                            }
+
+                            @Override
+                            public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+                                System.out.println("channelInactive");
+                            }
+                        });
                     }
                 });
-        ChannelFuture connect = bootstrap.connect("127.0.0.1", 8888);
-        connect.addListener((ChannelFutureListener) future -> {
-            System.out.println("operationComplete");
-            ByteBuf buf = ByteBufAllocator.DEFAULT.buffer();
 
-            buf.writeBytes("fasongguoqu".getBytes());
-            future.channel().writeAndFlush(buf);
-        });
+        ChannelFuture connect = bootstrap.connect("127.0.0.1", 8888);
 
         connect.channel().closeFuture().sync();
+
+        new CountDownLatch(1).await();
     }
 
 

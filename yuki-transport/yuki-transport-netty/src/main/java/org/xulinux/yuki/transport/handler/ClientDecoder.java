@@ -47,6 +47,12 @@ public class ClientDecoder extends ByteToMessageDecoder {
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        this.waitingJobs.add(recorder);
+        this.ctx.close();
+    }
+
+    @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
         switch (state) {
             case HEAD_PARSE:

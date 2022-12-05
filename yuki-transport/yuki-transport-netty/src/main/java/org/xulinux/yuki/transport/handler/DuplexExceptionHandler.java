@@ -35,6 +35,8 @@ public class DuplexExceptionHandler extends ChannelDuplexHandler {
                 }
             }
         });
+
+        super.write(ctx,msg,promise);
     }
 
     @Override

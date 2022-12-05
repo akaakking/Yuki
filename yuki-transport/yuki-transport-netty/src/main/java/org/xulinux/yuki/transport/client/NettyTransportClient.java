@@ -71,7 +71,8 @@ public class NettyTransportClient implements TransportClient {
     }
 
     @Override
-    public String resumeTransmission(List<NodeInfo> resourceHoders, File[] logs) {
+    public String resumeTransmission(List<NodeInfo> resourceHoders, File[] logs, ProgressBar progressBar) {
+        this.progressBar = progressBar;
         initBootstrap(resourceHoders.size());
 
         // 开始封装
@@ -79,7 +80,7 @@ public class NettyTransportClient implements TransportClient {
         for (int i = 0; i < recorders.length; i++) {
             recorders[i] = new FileReceiveRecorder(logs[i].getPath());
             progressBar.add(recorders[i].getTotalSize());
-            ChannelFuture connect = bootstrap.connect();
+            ChannelFuture connect = bootstrap.connect(resourceHoders.get(i).getIp(),resourceHoders.get(i).getPort());
 
             final int finalI = i;
             connect.addListener(new ChannelFutureListener() {
