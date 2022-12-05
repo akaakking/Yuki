@@ -29,7 +29,6 @@ public class TelnetHandler extends SimpleChannelInboundHandler<String> implement
         ctx.writeAndFlush(PROTMT);
     }
 
-
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         this.ctx = ctx;

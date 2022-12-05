@@ -3,6 +3,8 @@ package org.xulinux.yuki.demo.telnetServer;
 import io.netty.channel.ChannelHandlerContext;
 import org.xulinux.yuki.nodeServer.NodeServer;
 
+import java.util.List;
+
 /**
  *
  * @Author wfh
@@ -22,8 +24,11 @@ public class CommandExecutor  {
     public static final String EXIT = "exit";
 
     private static NodeServer nodeServer;
+
+    private static TelnetNettyServer telnetNettyServer;
     private static ChannelHandlerContext ctx;
 
+    // 这个东西太丑了，可以改一下但没必要
     public static void execute(String message) {
         if (message.startsWith(DOWNLOAD)) {
             download(message);
@@ -33,7 +38,11 @@ public class CommandExecutor  {
             service(message);
         } else if (message.startsWith(SHOW)) {
             show(message);
-        } else if (message.equalsIgnoreCase(EXIT)) {
+        } else  if (message.startsWith("shutdown")){
+            shut(message);
+        } else if(message.startsWith("search")) {
+            search(message);
+        } else if (message.equalsIgnoreCase(EXIT) || message.equalsIgnoreCase("x")) {
             try {
                 ctx.channel().close().sync();
             } catch (InterruptedException e) {
@@ -45,6 +54,31 @@ public class CommandExecutor  {
            withoutCommand(message);
         }
     }
+
+    public static void setTelnetNettyServer(TelnetNettyServer telnetNettyServer) {
+        CommandExecutor.telnetNettyServer = telnetNettyServer;
+    }
+
+
+    // todo shutdown gracefully
+    private static void shut(String message) {
+        if (message.length() > "shutdown".length()) {
+            nodeServer.shutdown(true);
+        } else {
+            nodeServer.shutdown(false);
+        }
+
+        telnetNettyServer.shutdown();
+    }
+
+    // search *
+    private static void search(String message) {
+        List<String> list = nodeServer.searchResources(message.substring(6).trim());
+        for (String s : list) {
+            nodeServer.speak(s);
+        }
+    }
+
 
     // regist resourceId path
     private static void regist(String message) {
@@ -68,10 +102,11 @@ public class CommandExecutor  {
 
 
 
+    // 拉的这个操作很重（注册中心带宽，网络传输延迟），todo 拉去之后缓存起来。
     private static void show(String message) {
-        if (message.equalsIgnoreCase("show local all")) {
+        if (message.equalsIgnoreCase("show local")) {
             showLocalResource();
-        } else if (message.equalsIgnoreCase("show remote xx")){
+        } else if (message.equalsIgnoreCase("show remote")){
             showRemote();
         } else {
             withoutCommand(message);
@@ -83,12 +118,14 @@ public class CommandExecutor  {
 
     // todo remote
     private static void showRemote() {
-        nodeServer.speak("todo you can help me to improve it");
+        search("search *");
     }
 
     // TODO 存储在哪里？ hashmap的初始化
     private static void showLocalResource() {
-
+        for (String localResource : nodeServer.getLocalResources()) {
+            nodeServer.speak(localResource);
+        }
     }
 
     // download resouceid to dir

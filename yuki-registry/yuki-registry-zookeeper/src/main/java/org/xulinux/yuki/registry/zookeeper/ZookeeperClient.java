@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * //TODO add class commment here
+ * 其实完全可以再做一个特性就是说隔离起来，比如说根据地域啊这些，
+ * 这种的话用关系型数据库就是比较合适。
+ *
  *
  * @Author wfh
  * @Date 2022/10/8 下午6:17
@@ -49,6 +51,10 @@ public class ZookeeperClient implements RegistryClient {
     public List<String> searchResource(String nameStart) {
         try {
             List<String> list = client.getChildren().forPath("/yuki");
+
+            if (nameStart.equals("*")) {
+                return list;
+            }
 
             return     list.stream().filter(s -> s.startsWith(nameStart))
                     .collect(Collectors.toList());

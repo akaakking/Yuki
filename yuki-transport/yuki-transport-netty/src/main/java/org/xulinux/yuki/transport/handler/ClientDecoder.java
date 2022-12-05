@@ -41,7 +41,10 @@ public class ClientDecoder extends ByteToMessageDecoder {
         state = State.HEAD_PARSE;
     }
 
-
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        this.ctx = ctx;
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf byteBuf, List<Object> list) throws Exception {
@@ -55,11 +58,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
             default:
                 break;
         }
-    }
-
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        this.ctx = ctx;
     }
 
     /**
@@ -116,7 +114,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
             }
         }
     }
-
 
     private void headParser(ByteBuf byteBuf, List<Object> list) {
         if (byteBuf.readableBytes() < 4) {
@@ -188,8 +185,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
         // 写完之后再重新置为HEAD_PARSER
         FILE_TRANSFER
     }
-
-    // 要不一次发 4k？
 }
 
 /**

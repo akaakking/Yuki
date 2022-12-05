@@ -90,6 +90,10 @@ public class NodeServer implements Speaker {
         transportServer.setPort(nodeInfo.getPort());
     }
 
+    public List<String> searchResources(String prefix) {
+        return this.registryClient.searchResource(prefix);
+    }
+
     public AtomicInteger getTransCount() {
         return transportServer.transporting();
     }
@@ -139,7 +143,10 @@ public class NodeServer implements Speaker {
 
         this.speak("正在关闭传输服务...");
         // 关闭netty监听服务
-        transportServer.terminal();
+        if (transportServer != null) {
+            transportServer.terminal();
+        }
+        transportClient.shutdown();
         this.speak("传输服务关闭成功");
     }
 
@@ -176,6 +183,17 @@ public class NodeServer implements Speaker {
         this.speak("反注册服务[" + resourthID +
                 "]成功！");
         // todo 1. hashmap delete 2. log delete
+    }
+
+    public void shutdown(boolean force) {
+        if (servicing && !force) {
+            speak("有任务正在运行，如果要强制退出，请用 -force");
+            return;
+        }
+
+        this.speak("bye~");
+
+        terminal();
     }
 
     /**
@@ -261,7 +279,19 @@ public class NodeServer implements Speaker {
         // 只会少不会多
         balance.select(resouceHolders, files.length);
 
-        this.transportClient.resumeTransmission(resouceHolders, files);
+        String path = this.transportClient.resumeTransmission(resouceHolders, files);
+        this.speak("下载完毕！");
+
+        this.speak("正在注册服务...");
+        // down
+        registLocal(resourceId,path);
+
+        if (servicing) {
+            registToRegistry(resourceId);
+        }
+
+        this.speak("注册服务成功...");
+
     }
 
     @Override
@@ -308,5 +338,14 @@ public class NodeServer implements Speaker {
 
             id2path.put(kv[0],kv[1]);
         }
+    }
+
+    public List<String> getLocalResources() {
+        List<String> list = new ArrayList<>();
+        for (String s : id2path.keySet()) {
+            list.add(s);
+        }
+
+        return list;
     }
 }

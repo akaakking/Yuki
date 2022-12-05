@@ -20,7 +20,9 @@ public interface TransportClient {
     // 可不可以搞成异步的呢？
     void download(List<NodeInfo> resouceHolders, JobMetaData jobMetaData, ProgressBar progressBar);
     // todo
-    void resumeTransmission(List<NodeInfo> resouceHolders, File[] logs);
+    String resumeTransmission(List<NodeInfo> resouceHolders, File[] logs);
     void rmLogAndResource();
+
+    void shutdown();
 }
 

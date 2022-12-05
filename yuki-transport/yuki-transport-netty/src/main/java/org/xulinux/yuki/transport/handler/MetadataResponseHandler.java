@@ -51,6 +51,7 @@ public class MetadataResponseHandler extends SimpleChannelInboundHandler<Resourc
         JobMetaData jobMetaData = protoJob.clone(fileSectionInfos, nodeInfo.getHostString());
         FileReceiveRecorder recorder = new FileReceiveRecorder(jobMetaData);
         this.progressBar.add(recorder.getTotalSize());
+        ch.pipeline().get(DuplexExceptionHandler.class).setRecorder(recorder);
         ch.pipeline().get(ClientDecoder.class).sendJob(recorder);
     }
 

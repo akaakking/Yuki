@@ -5,9 +5,11 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.xulinux.yuki.common.BeanUtil;
+import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
 import org.xulinux.yuki.transport.Message;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 /**
  * //TODO add class commment here
@@ -26,6 +28,7 @@ public class Encoder extends MessageToByteEncoder<Message> {
         byteBuf.writeInt(bytes.length);
         byteBuf.writeBytes(bytes);
     }
+
 }
 
 

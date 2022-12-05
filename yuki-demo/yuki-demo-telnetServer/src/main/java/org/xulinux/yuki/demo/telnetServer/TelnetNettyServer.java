@@ -13,16 +13,20 @@ import org.xulinux.yuki.nodeServer.NodeServer;
 
 public class TelnetNettyServer {
     private NodeServer nodeServer;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workerGroup;
 
     public TelnetNettyServer(NodeServer nodeServer) {
         this.nodeServer = nodeServer;
     }
 
     public void start(int port) {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(1);
+        bossGroup = new NioEventLoopGroup(1);
+        workerGroup = new NioEventLoopGroup(1);
 
         ServerBootstrap bootstrap = new ServerBootstrap();
+
+        CommandExecutor.setTelnetNettyServer(this);
 
         bootstrap.group(bossGroup,workerGroup)
                 .channel(NioServerSocketChannel.class)
@@ -42,5 +46,10 @@ public class TelnetNettyServer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void shutdown() {
+        bossGroup.shutdownGracefully();
+        workerGroup.shutdownGracefully();
     }
 }

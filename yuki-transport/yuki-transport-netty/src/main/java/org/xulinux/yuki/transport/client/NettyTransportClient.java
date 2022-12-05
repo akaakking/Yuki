@@ -8,7 +8,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.commons.io.FileUtils;
 import org.xulinux.yuki.common.JobMetaData;
 import org.xulinux.yuki.common.ProgressBar;
-import org.xulinux.yuki.common.Speaker;
 import org.xulinux.yuki.common.fileUtil.FileUtil;
 import org.xulinux.yuki.common.recorder.FileReceiveRecorder;
 import org.xulinux.yuki.common.recorder.ResourcePathRecorder;
@@ -16,6 +15,7 @@ import org.xulinux.yuki.common.NodeInfo;
 import org.xulinux.yuki.transport.Message;
 import org.xulinux.yuki.transport.TransportClient;
 import org.xulinux.yuki.transport.handler.ClientDecoder;
+import org.xulinux.yuki.transport.handler.DuplexExceptionHandler;
 import org.xulinux.yuki.transport.handler.Encoder;
 import org.xulinux.yuki.transport.handler.MetadataResponseHandler;
 
@@ -71,28 +71,39 @@ public class NettyTransportClient implements TransportClient {
     }
 
     @Override
-    public void resumeTransmission(List<NodeInfo> resourceHoders, File[] logs) {
+    public String resumeTransmission(List<NodeInfo> resourceHoders, File[] logs) {
         initBootstrap(resourceHoders.size());
 
         // 开始封装
         FileReceiveRecorder[] recorders = new FileReceiveRecorder[logs.length];
         for (int i = 0; i < recorders.length; i++) {
             recorders[i] = new FileReceiveRecorder(logs[i].getPath());
+            progressBar.add(recorders[i].getTotalSize());
             ChannelFuture connect = bootstrap.connect();
 
             final int finalI = i;
             connect.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
-                    future.channel().pipeline().get(ClientDecoder.class).sendJob(recorders[finalI]);
+                    future.channel().pipeline().get(DuplexExceptionHandler.class)
+                            .setRecorder(recorders[finalI]);
+                    future.channel().pipeline().get(ClientDecoder.class)
+                            .sendJob(recorders[finalI]);
                 }
             });
         }
 
         // logs  >= resourcehoders
         for (int i = resourceHoders.size(); i < recorders.length; i++) {
+            progressBar.add(recorders[i].getTotalSize());
             waitingJobs.add(recorders[i]);
         }
+
+        progressBar.show();
+
+        eventLoopGroup.shutdownGracefully();
+
+        return recorders[0].getJobMetaData().getDownDir() + recorders[0].getJobMetaData().getResourceDirName();
     }
 
     @Override
@@ -116,6 +127,12 @@ public class NettyTransportClient implements TransportClient {
         }
     }
 
+    @Override
+    public void shutdown() {
+        close();
+    }
+
+    // 重启后的续传
     private void initBootstrap(int resouceHolderCount) {
         eventLoopGroup = new NioEventLoopGroup(resouceHolderCount);
         bootstrap = new Bootstrap();
@@ -128,12 +145,16 @@ public class NettyTransportClient implements TransportClient {
             protected void initChannel(NioSocketChannel channel) throws Exception {
                 ClientDecoder clientDecoder = new ClientDecoder();
                 clientDecoder.setWaitingJobs(waitingJobs);
+                DuplexExceptionHandler duplexExceptionHandler = new DuplexExceptionHandler();
+                duplexExceptionHandler.setWaitingJobs(waitingJobs);
 
                 channel.pipeline().addLast(encoder);
                 channel.pipeline().addLast(clientDecoder);
+                channel.pipeline().addLast(duplexExceptionHandler);
             }
         });
     }
+
 
     private void initBootstrap(List<NodeInfo> nodeInfos, JobMetaData jobMetaData) {
         eventLoopGroup = new NioEventLoopGroup(nodeInfos.size());
@@ -154,15 +175,20 @@ public class NettyTransportClient implements TransportClient {
             protected void initChannel(NioSocketChannel channel) throws Exception {
                 ClientDecoder clientDecoder = new ClientDecoder();
                 clientDecoder.setWaitingJobs(waitingJobs);
+                DuplexExceptionHandler duplexExceptionHandler = new DuplexExceptionHandler();
+                duplexExceptionHandler.setWaitingJobs(waitingJobs);
 
                 channel.pipeline().addLast(encoder);
                 channel.pipeline().addLast(clientDecoder);
                 channel.pipeline().addLast(metadataResponseHandler);
+                channel.pipeline().addLast(duplexExceptionHandler);
             }
         });
     }
 
     public void close() {
-        eventLoopGroup.shutdownGracefully();
+        if (eventLoopGroup != null) {
+            eventLoopGroup.shutdownGracefully();
+        }
     }
 }
