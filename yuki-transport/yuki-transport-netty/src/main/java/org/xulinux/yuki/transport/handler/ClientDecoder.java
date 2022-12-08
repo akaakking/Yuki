@@ -32,11 +32,8 @@ public class ClientDecoder extends ByteToMessageDecoder {
     private State state;
     private ChannelHandlerContext ctx;
     private int fileSectionIndex;
-
     private JobMetaData jobMetaData;
-
     private BlockingQueue<FileReceiveRecorder> waitingJobs;
-
     public ClientDecoder() {
         state = State.HEAD_PARSE;
     }
@@ -44,12 +41,6 @@ public class ClientDecoder extends ByteToMessageDecoder {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         this.ctx = ctx;
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        this.waitingJobs.add(recorder);
-        this.ctx.close();
     }
 
     @Override

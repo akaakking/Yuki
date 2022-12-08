@@ -1,0 +1,4 @@
+org/xulinux/yuki/transport/Message$Type.class
+org/xulinux/yuki/transport/TransportServer.class
+org/xulinux/yuki/transport/Message.class
+org/xulinux/yuki/transport/TransportClient.class

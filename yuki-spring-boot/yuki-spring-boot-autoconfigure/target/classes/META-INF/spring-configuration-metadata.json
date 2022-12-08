@@ -21,12 +21,14 @@
     {
       "name": "yuki.max-servicing",
       "type": "java.lang.Integer",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties",
+      "defaultValue": 0
     },
     {
       "name": "yuki.port",
       "type": "java.lang.Integer",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties"
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties",
+      "defaultValue": 0
     },
     {
       "name": "yuki.registry.ip",
@@ -36,7 +38,8 @@
     {
       "name": "yuki.registry.port",
       "type": "java.lang.Integer",
-      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry"
+      "sourceType": "org.xulinux.yuki.springboot.autoconfigure.YukiProperties$Registry",
+      "defaultValue": 0
     }
   ],
   "hints": []

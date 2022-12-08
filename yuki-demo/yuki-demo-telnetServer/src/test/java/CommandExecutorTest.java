@@ -11,10 +11,8 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * //TODO add class commment here
  *
- * @Author wfh
- * @Date 2022/11/26 下午5:20
+ *
  */
 public class CommandExecutorTest {
     public static void main(String[] ars) {

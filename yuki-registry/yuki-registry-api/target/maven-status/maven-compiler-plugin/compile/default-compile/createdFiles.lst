@@ -1,0 +1,3 @@
+org/xulinux/yuki/registry/LoadBalance.class
+org/xulinux/yuki/registry/RegistryClient.class
+org/xulinux/yuki/registry/DefaultLoadBalance.class

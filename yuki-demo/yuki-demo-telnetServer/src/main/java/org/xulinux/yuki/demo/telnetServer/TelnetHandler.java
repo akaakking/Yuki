@@ -40,7 +40,7 @@ public class TelnetHandler extends SimpleChannelInboundHandler<String> implement
     }
 
     @Override
-    public void messageFromSpeaker(String message) {
+    public void messageFromSpeaker(String  message) {
         if (message.startsWith("\r")) {
             this.ctx.writeAndFlush(message);
         } else {

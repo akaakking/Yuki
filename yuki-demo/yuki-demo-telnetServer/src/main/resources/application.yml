@@ -1,6 +1,6 @@
 yuki:
   aof-path: /home/wfh/YukiTest/aof
-  port: 9111
+  port: 9140
   registry:
     port: 2181
     ip: 127.0.0.1
